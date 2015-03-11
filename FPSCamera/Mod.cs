@@ -28,22 +28,16 @@ namespace FPSCamera
 
         public override void OnLevelLoaded(LoadMode mode)
         {
-            //Debugger.Initialize();
-            //Debugger.Log("Created");
-
-            //var objects = GameObject.FindObjectsOfType<CameraController>();
-            //Debugger.Log(String.Format("Found {0} cameras", objects.Length));
-
             var uiView = GameObject.FindObjectOfType<UIView>();
 
             // Create a GameObject with a ColossalFramework.UI.UIButton component.
-            var buttonObject = new GameObject("CameraModeButton", typeof(UIButton));
+            var buttonObject = new GameObject();
 
             // Make the buttonObject a child of the uiView.
             buttonObject.transform.parent = uiView.transform;
 
             // Get the button component.
-            cameraModeButton = buttonObject.GetComponent<UIButton>();
+            cameraModeButton = buttonObject.AddComponent<UIButton>();
 
             // Set the text to show on the button.
             cameraModeButton.text = "Camera: Standard";
@@ -65,22 +59,22 @@ namespace FPSCamera
             cameraModeButton.pressedTextColor = new Color32(30, 30, 44, 255);
 
             // Place the button.
-            cameraModeButton.transformPosition = new Vector3(-1.65f, 0.97f);
+            cameraModeButton.transformPosition = new Vector3(1.25f, 0.97f);
 
             // Respond to button click.
             cameraModeButton.eventClick += ButtonClick;
 
-            var labelObject = new GameObject("CameraModeLabel", typeof (UILabel));
+            var labelObject = new GameObject();
             labelObject.transform.parent = uiView.transform;
 
-            cameraModeLabel = labelObject.GetComponent<UILabel>();
-            cameraModeLabel.text = "Press (SPACE) to exit first-person mode";
+            cameraModeLabel = labelObject.AddComponent<UILabel>();
+            cameraModeLabel.text = "Press (TAB) to exit first-person mode";
             cameraModeLabel.textColor = new Color32(255, 255, 255, 255);
-            cameraModeLabel.transformPosition = new Vector3(-1.65f, 0.90f);
+            cameraModeLabel.transformPosition = new Vector3(1.15f, 0.90f);
             cameraModeLabel.Hide();
 
             FPSCamera.Initialize();
-            FPSCamera.onCameraModeChanged += state =>
+            FPSCamera.onCameraModeChanged = state =>
             {
                 cameraModeButton.text = state ? "Camera: First Person" : "Camera: Standard";
                 if (state)
@@ -94,10 +88,6 @@ namespace FPSCamera
             };
         }
 
-        public override void OnReleased()
-        {
-            Debugger.Log("Releasex");
-        }
         private void ButtonClick(UIComponent component, UIMouseEventParameter eventParam)
         {
             FPSCamera.SetMode(!FPSCamera.IsEnabled());

@@ -60,7 +60,7 @@ namespace FPSCamera
         {
             if (fpsModeEnabled)
             {
-                if(Input.GetKeyDown(KeyCode.Space))
+                if(Input.GetKeyDown(KeyCode.Tab))
                 {
                     SetMode(false);
                     return;
