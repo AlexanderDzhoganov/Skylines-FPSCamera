@@ -49,6 +49,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Config.cs" />
     <Compile Include="DebugConsole.cs" />
     <Compile Include="FPSCamera.cs" />
     <Compile Include="Mod.cs" />
@@ -56,7 +57,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>copy FPSCamera.dll "C:\Users\nlight\AppData\Local\Colossal Order\Cities_Skylines\Addons\Mods\FPSCamera"</PostBuildEvent>
+    <PostBuildEvent>copy FPSCamera.dll "C:\Program Files (x86)\Steam\steamapps\workshop\content\255710\406255342"</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

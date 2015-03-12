@@ -21,6 +21,27 @@ namespace FPSCamera
 
     }
 
+    public class ModTerrainUtil : TerrainExtensionBase
+    {
+
+        private static ITerrain terrain = null;
+
+        public static float GetHeight(float x, float z)
+        {
+            if (terrain == null)
+            {
+                return 0.0f;
+            }
+
+            return terrain.SampleTerrainHeight(x, z);
+        }
+
+        public override void OnCreated(ITerrain _terrain)
+        {
+            terrain = _terrain;
+        }
+    }
+
     public class ModLoad : LoadingExtensionBase
     {
         private UIButton cameraModeButton;
@@ -40,7 +61,7 @@ namespace FPSCamera
             cameraModeButton = buttonObject.AddComponent<UIButton>();
 
             // Set the text to show on the button.
-            cameraModeButton.text = "Camera: Standard";
+            cameraModeButton.text = "Camera options";
 
             // Set the button dimensions.
             cameraModeButton.width = 220;
@@ -68,7 +89,6 @@ namespace FPSCamera
             labelObject.transform.parent = uiView.transform;
 
             cameraModeLabel = labelObject.AddComponent<UILabel>();
-            cameraModeLabel.text = "Press (TAB) to exit first-person mode";
             cameraModeLabel.textColor = new Color32(255, 255, 255, 255);
             cameraModeLabel.transformPosition = new Vector3(1.15f, 0.90f);
             cameraModeLabel.Hide();
@@ -76,9 +96,9 @@ namespace FPSCamera
             FPSCamera.Initialize();
             FPSCamera.onCameraModeChanged = state =>
             {
-                cameraModeButton.text = state ? "Camera: First Person" : "Camera: Standard";
                 if (state)
                 {
+                    cameraModeLabel.text = String.Format("Press ({0}) to exit first-person mode", FPSCamera.GetToggleUIKey());
                     cameraModeLabel.Show();
                 }
                 else
@@ -90,7 +110,7 @@ namespace FPSCamera
 
         private void ButtonClick(UIComponent component, UIMouseEventParameter eventParam)
         {
-            FPSCamera.SetMode(!FPSCamera.IsEnabled());
+            FPSCamera.ToggleUI();
         }
 
     }
