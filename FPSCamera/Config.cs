@@ -16,6 +16,7 @@ namespace FPSCamera
         public KeyCode toggleFPSCameraHotkey = KeyCode.Tab;
         public bool limitSpeedGround = false;
         public float fieldOfView = 45.0f;
+        public bool preventClipGround = true;
 
         public void OnPreSerialize()
         {
