@@ -30,9 +30,17 @@ namespace FPSCamera
         float rotationY = 0f;
 
         private bool showUI = false;
-        private Rect configWindowRect = new Rect(Screen.width - 400 - 128, 100, 400, 220);
+        private Rect configWindowRect = new Rect(Screen.width - 400 - 128, 100, 400, 300);
 
         private bool waitingForHotkey = false;
+
+        private Vector3 mainCameraPosition;
+        private Quaternion mainCameraOrientation;
+
+        private Vector3 fpsCameraPosition;
+        private Quaternion fpsCameraOrientation;
+
+        private bool initPositions = false;
 
         void Awake()
         {
@@ -43,6 +51,12 @@ namespace FPSCamera
             }
 
             SaveConfig();
+
+            mainCameraPosition = gameObject.transform.position;
+            mainCameraOrientation = gameObject.transform.rotation;
+
+            fpsCameraPosition = gameObject.transform.position;
+            fpsCameraOrientation = gameObject.transform.rotation;
         }
 
         void SaveConfig()
@@ -127,13 +141,39 @@ namespace FPSCamera
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Animated transitions: ");
+            config.animateTransitions = GUILayout.Toggle(config.animateTransitions, "");
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Animation speed: ");
+            config.animationSpeed = GUILayout.HorizontalSlider(config.animationSpeed, 0.1f, 4.0f, GUILayout.Width(200));
+            GUILayout.Label(config.animationSpeed.ToString("0.00"));
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+
             if(GUILayout.Button("Save configuration"))
             {
                 SaveConfig();
             }
+
+            if (GUILayout.Button("Reset configuration"))
+            {
+                config = new Configuration();
+                SaveConfig();
+            }
         }
 
-        public static void SetMode(bool fpsMode)
+        private bool inModeTransition = false;
+        private Vector3 transitionTargetPosition = Vector3.zero;
+        private Quaternion transitionTargetOrientation = Quaternion.identity;
+        private Vector3 transitionStartPosition = Vector3.zero;
+        private Quaternion transitionStartOrientation = Quaternion.identity;
+        private float transitionT = 0.0f;
+
+        public void SetMode(bool fpsMode)
         {
             instance.fpsModeEnabled = fpsMode;
 
@@ -141,11 +181,17 @@ namespace FPSCamera
             {
                 instance.controller.enabled = false;
                 Cursor.visible = false;
-                instance.rotationY = -instance.transform.localEulerAngles.x;
+                if (!config.animateTransitions)
+                {
+                    instance.rotationY = -instance.transform.localEulerAngles.x;
+                }
             }
             else
             {
-                instance.controller.enabled = true;
+                if (!config.animateTransitions)
+                {
+                    instance.controller.enabled = true;
+                }
                 Cursor.visible = true;
             }
 
@@ -170,16 +216,74 @@ namespace FPSCamera
             return instance.fpsModeEnabled;
         }
 
+        private Vector3 CalcFPSCameraTargetPosition()
+        {
+            return fpsCameraPosition;
+        }
+
+        private Quaternion CalcFPSCameraTargetOrientiation()
+        {
+            return fpsCameraOrientation;
+        }
+
         void Update()
         {
-            if (fpsModeEnabled)
+            if (!initPositions)
             {
-                if (Input.GetKeyDown(config.toggleFPSCameraHotkey))
+                mainCameraPosition = gameObject.transform.position;
+                mainCameraOrientation = gameObject.transform.rotation;
+
+                fpsCameraPosition = gameObject.transform.position;
+                fpsCameraOrientation = gameObject.transform.rotation;
+
+                rotationY = -instance.transform.localEulerAngles.x;
+                initPositions = true;
+            }
+
+            if (Input.GetKeyDown(config.toggleFPSCameraHotkey))
+            {
+                if (config.animateTransitions)
                 {
-                    SetMode(false);
-                    return;
+                    inModeTransition = true;
+                    transitionT = 0.0f;
+
+                    transitionStartPosition = gameObject.transform.position;
+                    transitionStartOrientation = gameObject.transform.rotation;
+
+                    if (fpsModeEnabled)
+                    {
+                        transitionTargetPosition = mainCameraPosition;
+                        transitionTargetOrientation = mainCameraOrientation;
+                    }
+                    else
+                    {
+                        transitionTargetPosition = CalcFPSCameraTargetPosition();
+                        transitionTargetOrientation = CalcFPSCameraTargetOrientiation();
+                    }
                 }
 
+                SetMode(!fpsModeEnabled);
+            }
+
+            if (config.animateTransitions && inModeTransition)
+            {
+                transitionT += Time.deltaTime * config.animationSpeed;
+
+                gameObject.transform.position = Vector3.Slerp(transitionStartPosition, transitionTargetPosition, transitionT);
+                gameObject.transform.rotation = Quaternion.Slerp(transitionStartOrientation, transitionTargetOrientation, transitionT);
+
+                if (transitionT >= 1.0f)
+                {
+                    inModeTransition = false;
+
+                    if (!fpsModeEnabled)
+                    {
+                        instance.controller.enabled = true;
+                    }
+                }
+            }
+            else if (fpsModeEnabled)
+            {
                 var pos = gameObject.transform.position;
                 float terrainY = ModTerrainUtil.GetHeight(pos.x, pos.z);
 
@@ -236,11 +340,14 @@ namespace FPSCamera
 
                 camera.fieldOfView = config.fieldOfView;
                 camera.nearClipPlane = 1.0f;
-            }
 
-            if (Input.GetKeyDown(config.toggleFPSCameraHotkey))
+                fpsCameraPosition = gameObject.transform.position;
+                fpsCameraOrientation = gameObject.transform.rotation;
+            }
+            else
             {
-                SetMode(true);
+                mainCameraPosition = gameObject.transform.position;
+                mainCameraOrientation = gameObject.transform.rotation;
             }
         }
 

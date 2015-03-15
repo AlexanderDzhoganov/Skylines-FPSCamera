@@ -17,6 +17,8 @@ namespace FPSCamera
         public bool limitSpeedGround = false;
         public float fieldOfView = 45.0f;
         public bool preventClipGround = true;
+        public bool animateTransitions = true;
+        public float animationSpeed = 1.0f;
 
         public void OnPreSerialize()
         {
