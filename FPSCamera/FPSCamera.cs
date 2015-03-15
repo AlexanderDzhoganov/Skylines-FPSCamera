@@ -1,4 +1,5 @@
 ﻿using ColossalFramework;
+using ColossalFramework.Math;
 using ColossalFramework.UI;
 using UnityEngine;
 
@@ -40,6 +41,9 @@ namespace FPSCamera
         private Vector3 fpsCameraPosition;
         private Quaternion fpsCameraOrientation;
 
+        private TerrainManager terrainManager;
+        private NetManager netManager;
+
         private bool initPositions = false;
 
         void Awake()
@@ -57,6 +61,9 @@ namespace FPSCamera
 
             fpsCameraPosition = gameObject.transform.position;
             fpsCameraOrientation = gameObject.transform.rotation;
+
+            terrainManager = Singleton<TerrainManager>.instance;
+            netManager = Singleton<NetManager>.instance;
         }
 
         void SaveConfig()
@@ -285,11 +292,26 @@ namespace FPSCamera
             else if (fpsModeEnabled)
             {
                 var pos = gameObject.transform.position;
-                float terrainY = ModTerrainUtil.GetHeight(pos.x, pos.z);
+                float terrainY = terrainManager.SampleDetailHeight(gameObject.transform.position);
+                float waterY = terrainManager.WaterLevel(new Vector2(gameObject.transform.position.x, gameObject.transform.position.z));
+                terrainY = Mathf.Max(terrainY, waterY);
 
                 if (config.snapToGround)
                 {
-                    gameObject.transform.position = new Vector3(pos.x, terrainY + config.groundOffset, pos.z);
+                    Segment3 ray = new Segment3(gameObject.transform.position + new Vector3(0f, 1.5f, 0f), gameObject.transform.position + new Vector3(0f, -1000f, 0f));
+
+                    Vector3 hitPos;
+                    ushort nodeIndex;
+                    ushort segmentIndex;
+                    Vector3 hitPos2;
+
+                    if (netManager.RayCast(ray, 0f, ItemClass.Service.Road, ItemClass.Service.PublicTransport, ItemClass.SubService.None, ItemClass.SubService.None, ItemClass.Layer.Default, ItemClass.Layer.None, NetNode.Flags.None, NetSegment.Flags.None, out hitPos, out nodeIndex, out segmentIndex)
+                        | netManager.RayCast(ray, 0f, ItemClass.Service.Beautification, ItemClass.Service.Water, ItemClass.SubService.None, ItemClass.SubService.None, ItemClass.Layer.Default, ItemClass.Layer.None, NetNode.Flags.None, NetSegment.Flags.None, out hitPos2, out nodeIndex, out segmentIndex))
+                    {
+                        terrainY = Mathf.Max(terrainY, Mathf.Max(hitPos.y, hitPos2.y));
+                    }
+
+                    gameObject.transform.position = Vector3.Lerp(gameObject.transform.position, new Vector3(pos.x, terrainY + config.groundOffset, pos.z), 0.9f);
                 }
 
                 float speedFactor = 1.0f;
