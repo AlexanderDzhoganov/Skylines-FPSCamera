@@ -48,6 +48,8 @@ namespace FPSCamera
         private bool initPositions = false;
 
         private float tempCameraMoveSpeed;
+        private float tempShiftCameraMoveSpeed;
+        public float scrollWheelModifier;
 
         void Awake()
         {
@@ -145,15 +147,15 @@ namespace FPSCamera
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Movement speed: ");
-            config.cameraMoveSpeed = GUILayout.HorizontalSlider(config.cameraMoveSpeed, 1.0f, 128.0f, GUILayout.Width(200));
+            GUILayout.Label("Walk speed: ");
+            config.cameraMoveSpeed = GUILayout.HorizontalSlider(config.cameraMoveSpeed, 1.0f, 1000.0f, GUILayout.Width(252));
             GUILayout.Label(config.cameraMoveSpeed.ToString("0.00"));
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Camera Move speed: ");
-            config.shiftCameraMoveSpeed = GUILayout.HorizontalSlider(config.shiftCameraMoveSpeed, 1.0f, 500.0f, GUILayout.Width(200));
+            GUILayout.Label("Sprint speed: ");
+            config.shiftCameraMoveSpeed = GUILayout.HorizontalSlider(config.shiftCameraMoveSpeed, 1.0f, 1000.0f, GUILayout.Width(250));
             GUILayout.Label(config.shiftCameraMoveSpeed.ToString("0.00"));
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
@@ -387,11 +389,26 @@ namespace FPSCamera
                 if (Input.GetKeyDown(config.toggleMoveSpeedHotkey))
                 {
                     tempCameraMoveSpeed = config.cameraMoveSpeed;
-                    config.cameraMoveSpeed = config.shiftCameraMoveSpeed;
+                    config.cameraMoveSpeed = config.shiftCameraMoveSpeed;                  
                 }
                 else if (Input.GetKeyUp(config.toggleMoveSpeedHotkey))
                 {
                     config.cameraMoveSpeed = tempCameraMoveSpeed;
+                }
+
+                if (Input.GetAxis("Mouse ScrollWheel")!=0)
+                {
+                    scrollWheelModifier = (Mathf.Clamp(scrollWheelModifier + (Input.GetAxis("Mouse ScrollWheel")*5), 0, 100));
+                    if (scrollWheelModifier <= -1)
+                    {
+                        tempShiftCameraMoveSpeed = (10 * (scrollWheelModifier - 1));
+                        config.shiftCameraMoveSpeed = tempShiftCameraMoveSpeed;
+                    }
+                    if (scrollWheelModifier >= 1)
+                    {
+                        tempShiftCameraMoveSpeed = (10 * (scrollWheelModifier + 1));
+                        config.shiftCameraMoveSpeed = tempShiftCameraMoveSpeed;
+                    }
                 }
 
                 float rotationX = transform.localEulerAngles.y + Input.GetAxis("Mouse X") * config.cameraRotationSensitivity;
