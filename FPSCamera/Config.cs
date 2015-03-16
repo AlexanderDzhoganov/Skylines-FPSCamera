@@ -12,7 +12,7 @@ namespace FPSCamera
         public float cameraMoveSpeed = 128.0f;
         public float cameraRotationSensitivity = 1.0f;
         public bool snapToGround = false;
-        public float groundOffset = 16.0f;
+        public float groundOffset = 1.10f;
         public KeyCode toggleFPSCameraHotkey = KeyCode.Tab;
         public bool limitSpeedGround = false;
         public float fieldOfView = 45.0f;

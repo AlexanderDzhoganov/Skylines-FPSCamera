@@ -137,7 +137,7 @@ namespace FPSCamera
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("Offset from ground: ");
-            config.groundOffset = GUILayout.HorizontalSlider(config.groundOffset, 2.0f, 32.0f, GUILayout.Width(200));
+            config.groundOffset = GUILayout.HorizontalSlider(config.groundOffset, 0.25f, 32.0f, GUILayout.Width(200));
             GUILayout.Label(config.groundOffset.ToString("0.00"));
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
