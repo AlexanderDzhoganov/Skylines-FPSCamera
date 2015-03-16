@@ -31,9 +31,10 @@ namespace FPSCamera
         float rotationY = 0f;
 
         private bool showUI = false;
-        private Rect configWindowRect = new Rect(Screen.width - 400 - 128, 100, 400, 300);
+        private Rect configWindowRect = new Rect(Screen.width - 400 - 128, 100, 400, 350);
 
-        private bool waitingForHotkey = false;
+        private bool waitingForFPSHotkey = false;
+        private bool waitingForMoveSpeedHotkey = false;
 
         private Vector3 mainCameraPosition;
         private Quaternion mainCameraOrientation;
@@ -45,6 +46,8 @@ namespace FPSCamera
         private NetManager netManager;
 
         private bool initPositions = false;
+
+        private float tempCameraMoveSpeed;
 
         void Awake()
         {
@@ -75,6 +78,7 @@ namespace FPSCamera
         {
             if (showUI)
             {
+                //id, dimension, Label aufbau beginn bei DoConfigWindow, Bezeichnung
                 configWindowRect = GUI.Window(21521, configWindowRect, DoConfigWindow, "FPS Camera configuration");
             }
         }
@@ -85,26 +89,51 @@ namespace FPSCamera
             GUILayout.Label("Hotkey to toggle first-person:");
             GUILayout.FlexibleSpace();
 
-            string label = config.toggleFPSCameraHotkey.ToString();
-            if (waitingForHotkey)
+            string labelFPS = config.toggleFPSCameraHotkey.ToString();
+            if (waitingForFPSHotkey)
             {
-                label = "Waiting";
+                labelFPS = "Waiting";
 
                 if (Event.current.type == EventType.KeyDown)
                 {
-                    waitingForHotkey = false;
+                    waitingForFPSHotkey = false;
                     config.toggleFPSCameraHotkey = Event.current.keyCode;
                 }
             }
 
-            if (GUILayout.Button(label, GUILayout.Width(128)))
+            if (GUILayout.Button(labelFPS, GUILayout.Width(128)))
             {
-                if (!waitingForHotkey)
+                if (!waitingForFPSHotkey)
                 {
-                    waitingForHotkey = true;
+                    waitingForFPSHotkey = true;
+                }
+            }
+            GUILayout.EndHorizontal();
+
+            //Move Speed Hot-Key
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Hotkey for move-speed:");
+            GUILayout.FlexibleSpace();
+
+            string labelMoveSpeed = config.toggleMoveSpeedHotkey.ToString();
+            if (waitingForMoveSpeedHotkey)
+            {
+                labelMoveSpeed = "Waiting";
+
+                if (Event.current.type == EventType.KeyDown)
+                {
+                    waitingForMoveSpeedHotkey = false;
+                    config.toggleMoveSpeedHotkey = Event.current.keyCode;
                 }
             }
 
+            if (GUILayout.Button(labelMoveSpeed, GUILayout.Width(128)))
+            {
+                if (!waitingForMoveSpeedHotkey)
+                {
+                    waitingForMoveSpeedHotkey = true;
+                }
+            }
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
@@ -119,6 +148,13 @@ namespace FPSCamera
             GUILayout.Label("Movement speed: ");
             config.cameraMoveSpeed = GUILayout.HorizontalSlider(config.cameraMoveSpeed, 1.0f, 128.0f, GUILayout.Width(200));
             GUILayout.Label(config.cameraMoveSpeed.ToString("0.00"));
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Camera Move speed: ");
+            config.shiftCameraMoveSpeed = GUILayout.HorizontalSlider(config.shiftCameraMoveSpeed, 1.0f, 500.0f, GUILayout.Width(200));
+            GUILayout.Label(config.shiftCameraMoveSpeed.ToString("0.00"));
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
@@ -161,7 +197,7 @@ namespace FPSCamera
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
-            if(GUILayout.Button("Save configuration"))
+            if (GUILayout.Button("Save configuration"))
             {
                 SaveConfig();
             }
@@ -346,6 +382,16 @@ namespace FPSCamera
                 else if (Input.GetKey(KeyCode.E))
                 {
                     gameObject.transform.position += gameObject.transform.up * config.cameraMoveSpeed * speedFactor * Time.deltaTime;
+                }
+
+                if (Input.GetKeyDown(config.toggleMoveSpeedHotkey))
+                {
+                    tempCameraMoveSpeed = config.cameraMoveSpeed;
+                    config.cameraMoveSpeed = config.shiftCameraMoveSpeed;
+                }
+                else if (Input.GetKeyUp(config.toggleMoveSpeedHotkey))
+                {
+                    config.cameraMoveSpeed = tempCameraMoveSpeed;
                 }
 
                 float rotationX = transform.localEulerAngles.y + Input.GetAxis("Mouse X") * config.cameraRotationSensitivity;

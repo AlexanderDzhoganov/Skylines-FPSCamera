@@ -57,7 +57,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>copy FPSCamera.dll "C:\Program Files (x86)\Steam\steamapps\workshop\content\255710\406255342"</PostBuildEvent>
+    <PostBuildEvent>copy FPSCamera.dll "C:\Users\neocromicon\AppData\Local\Colossal Order\Cities_Skylines\Addons\Mods\FirstPersonMod"</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

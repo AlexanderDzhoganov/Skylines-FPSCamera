@@ -16,7 +16,7 @@ namespace FPSCamera
 
         public string Description
         {
-            get { return "See your city from a different perspective"; }
+            get { return "Sehe deine Stadt aus der Ego Perspektive"; }
         }
 
     }
@@ -44,7 +44,7 @@ namespace FPSCamera
 
     public class ModLoad : LoadingExtensionBase
     {
-        private UIButton cameraModeButton;
+        //private UIButton cameraModeButton;
         private UILabel cameraModeLabel;
 
         public override void OnLevelLoaded(LoadMode mode)
