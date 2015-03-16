@@ -148,14 +148,14 @@ namespace FPSCamera
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("Walk speed: ");
-            config.cameraMoveSpeed = GUILayout.HorizontalSlider(config.cameraMoveSpeed, 1.0f, 1000.0f, GUILayout.Width(252));
+            config.cameraMoveSpeed = GUILayout.HorizontalSlider(config.cameraMoveSpeed, 1.0f, 1000.0f, GUILayout.Width(250));
             GUILayout.Label(config.cameraMoveSpeed.ToString("0.00"));
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("Sprint speed: ");
-            config.shiftCameraMoveSpeed = GUILayout.HorizontalSlider(config.shiftCameraMoveSpeed, 1.0f, 1000.0f, GUILayout.Width(250));
+            config.shiftCameraMoveSpeed = GUILayout.HorizontalSlider(config.shiftCameraMoveSpeed, 1.0f, 1000.0f, GUILayout.Width(247));
             GUILayout.Label(config.shiftCameraMoveSpeed.ToString("0.00"));
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
