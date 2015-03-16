@@ -51,39 +51,31 @@ namespace FPSCamera
         {
             var uiView = GameObject.FindObjectOfType<UIView>();
 
-            // Create a GameObject with a ColossalFramework.UI.UIButton component.
-            var buttonObject = new GameObject();
+            UIButton uibutton = uiView.AddUIComponent(typeof(UIButton)) as UIButton;
 
-            // Make the buttonObject a child of the uiView.
-            buttonObject.transform.parent = uiView.transform;
+            uibutton.width = 36;
+            uibutton.height = 36;
 
-            // Get the button component.
-            cameraModeButton = buttonObject.AddComponent<UIButton>();
+            uibutton.pressedBgSprite = "OptionBasePressed";
+            uibutton.normalBgSprite = "OptionBase";
+            uibutton.hoveredBgSprite = "OptionBaseHovered";
+            uibutton.disabledBgSprite = "OptionBaseDisabled";
 
-            // Set the text to show on the button.
-            cameraModeButton.text = "Camera options";
+            uibutton.normalFgSprite = "InfoPanelIconFreecamera";
+            uibutton.foregroundSpriteMode = UIForegroundSpriteMode.Scale;
+            uibutton.scaleFactor = 1.0f;
 
-            // Set the button dimensions.
-            cameraModeButton.width = 220;
-            cameraModeButton.height = 30;
+            uibutton.tooltip = "FPS Camera configuration";
+            uibutton.tooltipBox = uiView.defaultTooltipBox;
 
-            // Style the button to look like a menu button.
-            cameraModeButton.normalBgSprite = "ButtonMenu";
-            cameraModeButton.disabledBgSprite = "ButtonMenuDisabled";
-            cameraModeButton.hoveredBgSprite = "ButtonMenuHovered";
-            cameraModeButton.focusedBgSprite = "ButtonMenuFocused";
-            cameraModeButton.pressedBgSprite = "ButtonMenuPressed";
-            cameraModeButton.textColor = new Color32(255, 255, 255, 255);
-            cameraModeButton.disabledTextColor = new Color32(7, 7, 7, 255);
-            cameraModeButton.hoveredTextColor = new Color32(7, 132, 255, 255);
-            cameraModeButton.focusedTextColor = new Color32(255, 255, 255, 255);
-            cameraModeButton.pressedTextColor = new Color32(30, 30, 44, 255);
+            UIComponent escbutton = uiView.FindUIComponent("Esc");
+            uibutton.relativePosition = new Vector2
+            (
+                escbutton.relativePosition.x + escbutton.width / 2.0f - uibutton.width / 2.0f - escbutton.width - 8.0f,
+                escbutton.relativePosition.y + escbutton.height / 2.0f - uibutton.height / 2.0f
+            );
 
-            // Place the button.
-            cameraModeButton.transformPosition = new Vector3(1.25f, 0.97f);
-
-            // Respond to button click.
-            cameraModeButton.eventClick += ButtonClick;
+            uibutton.eventClick += ButtonClick;
 
             var labelObject = new GameObject();
             labelObject.transform.parent = uiView.transform;
