@@ -3,7 +3,7 @@ using ColossalFramework.UI;
 using ICities;
 using UnityEngine;
 
-namespace FPSCamera
+namespace STGCamera
 {
 
     public class Mod : IUserMod
@@ -11,12 +11,12 @@ namespace FPSCamera
 
         public string Name
         {
-            get { return "First Person Camera"; }
+            get { return "Snap to Ground"; }
         }
 
         public string Description
         {
-            get { return "Sehe deine Stadt aus der Ego Perspektive"; }
+            get { return "See your City from the Eyes of your Citizen"; }
         }
 
     }
@@ -65,7 +65,7 @@ namespace FPSCamera
             uibutton.foregroundSpriteMode = UIForegroundSpriteMode.Scale;
             uibutton.scaleFactor = 1.0f;
 
-            uibutton.tooltip = "FPS Camera configuration";
+            uibutton.tooltip = "STG Camera configuration";
             uibutton.tooltipBox = uiView.defaultTooltipBox;
 
             UIComponent escbutton = uiView.FindUIComponent("Esc");
@@ -85,12 +85,12 @@ namespace FPSCamera
             cameraModeLabel.transformPosition = new Vector3(1.15f, 0.90f);
             cameraModeLabel.Hide();
 
-            FPSCamera.Initialize();
-            FPSCamera.onCameraModeChanged = state =>
+            STGCamera.Initialize();
+            STGCamera.onCameraModeChanged = state =>
             {
                 if (state)
                 {
-                    cameraModeLabel.text = String.Format("Press ({0}) to exit first-person mode", FPSCamera.GetToggleUIKey());
+                    cameraModeLabel.text = String.Format("Press ({0}) to exit first-person mode", STGCamera.GetToggleUIKey());
                     cameraModeLabel.Show();
                 }
                 else
@@ -102,7 +102,7 @@ namespace FPSCamera
 
         private void ButtonClick(UIComponent component, UIMouseEventParameter eventParam)
         {
-            FPSCamera.ToggleUI();
+            STGCamera.ToggleUI();
         }
 
     }

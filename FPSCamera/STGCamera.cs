@@ -3,9 +3,9 @@ using ColossalFramework.Math;
 using ColossalFramework.UI;
 using UnityEngine;
 
-namespace FPSCamera
+namespace STGCamera
 {
-    public class FPSCamera : MonoBehaviour
+    public class STGCamera : MonoBehaviour
     {
 
         public delegate void OnCameraModeChanged(bool state);
@@ -15,14 +15,14 @@ namespace FPSCamera
         public static void Initialize()
         {
             var controller = GameObject.FindObjectOfType<CameraController>();
-            instance = controller.gameObject.AddComponent<FPSCamera>();
+            instance = controller.gameObject.AddComponent<STGCamera>();
             instance.controller = controller;
             instance.camera = controller.GetComponent<Camera>();
         }
 
-        public static FPSCamera instance;
+        public static STGCamera instance;
 
-        public static readonly string configPath = "FPSCameraConfig.xml";
+        public static readonly string configPath = "STG_Camera_Config.xml";
         public Configuration config;
 
         private bool fpsModeEnabled = false;
@@ -31,7 +31,7 @@ namespace FPSCamera
         float rotationY = 0f;
 
         private bool showUI = false;
-        private Rect configWindowRect = new Rect(Screen.width - 400 - 128, 100, 400, 350);
+        private Rect configWindowRect = new Rect(Screen.width - 400 - 128, 100, 400, 385);
 
         private bool waitingForFPSHotkey = false;
         private bool waitingForMoveSpeedHotkey = false;
@@ -81,7 +81,7 @@ namespace FPSCamera
             if (showUI)
             {
                 //id, dimension, Label aufbau beginn bei DoConfigWindow, Bezeichnung
-                configWindowRect = GUI.Window(21521, configWindowRect, DoConfigWindow, "FPS Camera configuration");
+                configWindowRect = GUI.Window(21521, configWindowRect, DoConfigWindow, "STG Camera configuration");
             }
         }
 
@@ -114,7 +114,7 @@ namespace FPSCamera
 
             //Move Speed Hot-Key
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Hotkey for move-speed:");
+            GUILayout.Label("Hotkey for sprint:");
             GUILayout.FlexibleSpace();
 
             string labelMoveSpeed = config.toggleMoveSpeedHotkey.ToString();
@@ -209,6 +209,11 @@ namespace FPSCamera
                 config = new Configuration();
                 SaveConfig();
             }
+
+            GUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            GUILayout.Label("Original 'First Person Mod (FPS)' by AlexanderDzhoganov https://github.com/AlexanderDzhoganov/Skylines-FPSCamera");
+            GUILayout.EndHorizontal();
         }
 
         private bool inModeTransition = false;

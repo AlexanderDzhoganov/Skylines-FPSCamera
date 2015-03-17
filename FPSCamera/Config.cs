@@ -3,7 +3,7 @@ using System.IO;
 using System.Xml.Serialization;
 using UnityEngine;
 
-namespace FPSCamera
+namespace STGCamera
 {
 
     public class Configuration

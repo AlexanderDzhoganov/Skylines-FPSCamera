@@ -7,7 +7,7 @@
     <ProjectGuid>{72C99E7C-C11B-4669-90ED-0944DE5B9085}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>FPSCamera</RootNamespace>
+    <RootNamespace>STGCamera</RootNamespace>
     <AssemblyName>FPSCamera</AssemblyName>
     <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -30,6 +30,9 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup>
+    <RunPostBuildEvent>OnOutputUpdated</RunPostBuildEvent>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="Assembly-CSharp">
       <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Cities_Skylines\Cities_Data\Managed\Assembly-CSharp.dll</HintPath>
@@ -51,13 +54,13 @@
   <ItemGroup>
     <Compile Include="Config.cs" />
     <Compile Include="DebugConsole.cs" />
-    <Compile Include="FPSCamera.cs" />
+    <Compile Include="STGCamera.cs" />
     <Compile Include="Mod.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>copy FPSCamera.dll "C:\Users\neocromicon\AppData\Local\Colossal Order\Cities_Skylines\Addons\Mods\FirstPersonMod"</PostBuildEvent>
+    <PostBuildEvent>copy FPSCamera.dll "C:\Users\neocromicon\AppData\Local\Colossal Order\Cities_Skylines\Addons\Mods\FirstPersonMod\"</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
