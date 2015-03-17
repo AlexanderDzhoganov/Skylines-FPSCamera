@@ -51,6 +51,13 @@ namespace FPSCamera
         private Texture2D bgTexture;
         private GUISkin skin;
 
+        private SavedInputKey cameraMoveLeft;
+        private SavedInputKey cameraMoveRight;
+        private SavedInputKey cameraMoveForward;
+        private SavedInputKey cameraMoveBackward;
+        private SavedInputKey cameraZoomCloser;
+        private SavedInputKey cameraZoomAway;
+
         void Awake()
         {
             config = Configuration.Deserialize(configPath);
@@ -73,6 +80,13 @@ namespace FPSCamera
             bgTexture = new Texture2D(1, 1);
             bgTexture.SetPixel(0, 0, Color.grey);
             bgTexture.Apply();
+
+            cameraMoveLeft = new SavedInputKey(Settings.cameraMoveLeft, Settings.gameSettingsFile, DefaultSettings.cameraMoveLeft, true);
+            cameraMoveRight = new SavedInputKey(Settings.cameraMoveRight, Settings.gameSettingsFile, DefaultSettings.cameraMoveRight, true);
+            cameraMoveForward = new SavedInputKey(Settings.cameraMoveForward, Settings.gameSettingsFile, DefaultSettings.cameraMoveForward, true);
+            cameraMoveBackward = new SavedInputKey(Settings.cameraMoveBackward, Settings.gameSettingsFile, DefaultSettings.cameraMoveBackward, true);
+            cameraZoomCloser = new SavedInputKey(Settings.cameraZoomCloser, Settings.gameSettingsFile, DefaultSettings.cameraZoomCloser, true);
+            cameraZoomAway = new SavedInputKey(Settings.cameraZoomAway, Settings.gameSettingsFile, DefaultSettings.cameraZoomAway, true);
         }
 
         void SaveConfig()
@@ -368,29 +382,29 @@ namespace FPSCamera
                     speedFactor = Mathf.Clamp(speedFactor, 1.0f, 256.0f);
                 }
 
-                if (Input.GetKey(KeyCode.W))
+                if (cameraMoveForward.IsPressed())
                 {
                     gameObject.transform.position += gameObject.transform.forward * config.cameraMoveSpeed * speedFactor * Time.deltaTime;
                 }
-                else if (Input.GetKey(KeyCode.S))
+                else if (cameraMoveBackward.IsPressed())
                 {
                     gameObject.transform.position -= gameObject.transform.forward * config.cameraMoveSpeed * speedFactor * Time.deltaTime;
                 }
 
-                if (Input.GetKey(KeyCode.A))
+                if (cameraMoveLeft.IsPressed())
                 {
                     gameObject.transform.position -= gameObject.transform.right * config.cameraMoveSpeed * speedFactor * Time.deltaTime;
                 }
-                else if (Input.GetKey(KeyCode.D))
+                else if (cameraMoveRight.IsPressed())
                 {
                     gameObject.transform.position += gameObject.transform.right * config.cameraMoveSpeed * speedFactor * Time.deltaTime;
                 }
 
-                if (Input.GetKey(KeyCode.Q))
+                if (cameraZoomAway.IsPressed())
                 {
                     gameObject.transform.position -= gameObject.transform.up * config.cameraMoveSpeed * speedFactor * Time.deltaTime;
                 }
-                else if (Input.GetKey(KeyCode.E))
+                else if (cameraZoomCloser.IsPressed())
                 {
                     gameObject.transform.position += gameObject.transform.up * config.cameraMoveSpeed * speedFactor * Time.deltaTime;
                 }
