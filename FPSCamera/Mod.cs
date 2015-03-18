@@ -5,13 +5,11 @@ using UnityEngine;
 
 namespace STGCamera
 {
-
     public class Mod : IUserMod
     {
-
         public string Name
         {
-            get { return "Snap to Ground"; }
+            get { return "Snap to Ground " + Version; }
         }
 
         public string Description
@@ -19,6 +17,10 @@ namespace STGCamera
             get { return "See your City from the Eyes of your Citizen"; }
         }
 
+        public string Version
+        {
+            get { return "1.1"; }
+        }
     }
 
     public class ModTerrainUtil : TerrainExtensionBase
@@ -44,7 +46,6 @@ namespace STGCamera
 
     public class ModLoad : LoadingExtensionBase
     {
-        //private UIButton cameraModeButton;
         private UILabel cameraModeLabel;
 
         public override void OnLevelLoaded(LoadMode mode)

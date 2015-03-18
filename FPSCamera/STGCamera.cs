@@ -47,8 +47,7 @@ namespace STGCamera
 
         private bool initPositions = false;
 
-        private float tempCameraMoveSpeed;
-        private float tempShiftCameraMoveSpeed;
+        private float tempMoveSpeed;
         public float scrollWheelModifier;
 
         void Awake()
@@ -112,12 +111,10 @@ namespace STGCamera
             }
             GUILayout.EndHorizontal();
 
-            //Move Speed Hot-Key
             GUILayout.BeginHorizontal();
             GUILayout.Label("Hotkey for sprint:");
             GUILayout.FlexibleSpace();
-
-            string labelMoveSpeed = config.toggleMoveSpeedHotkey.ToString();
+            string labelMoveSpeed = config.toggleSprintHotkey.ToString();
             if (waitingForMoveSpeedHotkey)
             {
                 labelMoveSpeed = "Waiting";
@@ -125,7 +122,7 @@ namespace STGCamera
                 if (Event.current.type == EventType.KeyDown)
                 {
                     waitingForMoveSpeedHotkey = false;
-                    config.toggleMoveSpeedHotkey = Event.current.keyCode;
+                    config.toggleSprintHotkey = Event.current.keyCode;
                 }
             }
 
@@ -148,15 +145,15 @@ namespace STGCamera
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("Walk speed: ");
-            config.cameraMoveSpeed = GUILayout.HorizontalSlider(config.cameraMoveSpeed, 1.0f, 1000.0f, GUILayout.Width(250));
-            GUILayout.Label(config.cameraMoveSpeed.ToString("0.00"));
+            config.cameraWalkSpeed = GUILayout.HorizontalSlider(config.cameraWalkSpeed, 1.0f, 600.0f, GUILayout.Width(250));
+            GUILayout.Label(config.cameraWalkSpeed.ToString("0.00"));
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("Sprint speed: ");
-            config.shiftCameraMoveSpeed = GUILayout.HorizontalSlider(config.shiftCameraMoveSpeed, 1.0f, 1000.0f, GUILayout.Width(247));
-            GUILayout.Label(config.shiftCameraMoveSpeed.ToString("0.00"));
+            config.cameraSprintSpeed = GUILayout.HorizontalSlider(config.cameraSprintSpeed, 1.0f, 700.0f, GUILayout.Width(247));
+            GUILayout.Label(config.cameraSprintSpeed.ToString("0.00"));
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
@@ -366,53 +363,71 @@ namespace STGCamera
 
                 if (Input.GetKey(KeyCode.W))
                 {
-                    gameObject.transform.position += gameObject.transform.forward * config.cameraMoveSpeed * speedFactor * Time.deltaTime;
+                    if (Input.GetKey(config.toggleSprintHotkey))
+                    {
+                        gameObject.transform.position += gameObject.transform.forward * config.cameraSprintSpeed * speedFactor * Time.deltaTime;
+                    }
+                    else
+                    {
+                        gameObject.transform.position += gameObject.transform.forward * config.cameraWalkSpeed * speedFactor * Time.deltaTime;
+                    }               
                 }
                 else if (Input.GetKey(KeyCode.S))
                 {
-                    gameObject.transform.position -= gameObject.transform.forward * config.cameraMoveSpeed * speedFactor * Time.deltaTime;
+                    if (Input.GetKey(config.toggleSprintHotkey))
+                    {
+                        gameObject.transform.position -= gameObject.transform.forward * config.cameraSprintSpeed * speedFactor * Time.deltaTime;
+                    }
+                    else
+                    {
+                        gameObject.transform.position -= gameObject.transform.forward * config.cameraWalkSpeed * speedFactor * Time.deltaTime;
+                    }               
                 }
 
                 if (Input.GetKey(KeyCode.A))
                 {
-                    gameObject.transform.position -= gameObject.transform.right * config.cameraMoveSpeed * speedFactor * Time.deltaTime;
+                    if (Input.GetKey(config.toggleSprintHotkey))
+                    {
+                        gameObject.transform.position -= gameObject.transform.right * config.cameraSprintSpeed * speedFactor * Time.deltaTime;
+                    }
+                    else
+                    {
+                        gameObject.transform.position -= gameObject.transform.right * config.cameraWalkSpeed * speedFactor * Time.deltaTime;
+                    }
                 }
                 else if (Input.GetKey(KeyCode.D))
                 {
-                    gameObject.transform.position += gameObject.transform.right * config.cameraMoveSpeed * speedFactor * Time.deltaTime;
+                    if (Input.GetKey(config.toggleSprintHotkey))
+                    {
+                        gameObject.transform.position += gameObject.transform.right * config.cameraSprintSpeed * speedFactor * Time.deltaTime;
+                    }
+                    else
+                    {
+                        gameObject.transform.position += gameObject.transform.right * config.cameraWalkSpeed * speedFactor * Time.deltaTime;
+                    }
                 }
 
                 if (Input.GetKey(KeyCode.Q))
                 {
-                    gameObject.transform.position -= gameObject.transform.up * config.cameraMoveSpeed * speedFactor * Time.deltaTime;
+                    gameObject.transform.position -= gameObject.transform.up * config.cameraWalkSpeed * speedFactor * Time.deltaTime;
                 }
                 else if (Input.GetKey(KeyCode.E))
                 {
-                    gameObject.transform.position += gameObject.transform.up * config.cameraMoveSpeed * speedFactor * Time.deltaTime;
-                }
-
-                if (Input.GetKeyDown(config.toggleMoveSpeedHotkey))
-                {
-                    tempCameraMoveSpeed = config.cameraMoveSpeed;
-                    config.cameraMoveSpeed = config.shiftCameraMoveSpeed;                  
-                }
-                else if (Input.GetKeyUp(config.toggleMoveSpeedHotkey))
-                {
-                    config.cameraMoveSpeed = tempCameraMoveSpeed;
+                    gameObject.transform.position += gameObject.transform.up * config.cameraWalkSpeed * speedFactor * Time.deltaTime;
                 }
 
                 if (Input.GetAxis("Mouse ScrollWheel")!=0)
                 {
-                    scrollWheelModifier = (Mathf.Clamp(scrollWheelModifier + (Input.GetAxis("Mouse ScrollWheel")*5), 0, 100));
+                    scrollWheelModifier = (Mathf.Clamp(scrollWheelModifier + (Input.GetAxis("Mouse ScrollWheel")*5), 0, 69));
                     if (scrollWheelModifier <= -1)
                     {
-                        tempShiftCameraMoveSpeed = (10 * (scrollWheelModifier - 1));
-                        config.shiftCameraMoveSpeed = tempShiftCameraMoveSpeed;
+                        tempMoveSpeed = (10 * (scrollWheelModifier - 1));
+                        config.cameraSprintSpeed = tempMoveSpeed;
                     }
                     if (scrollWheelModifier >= 1)
                     {
-                        tempShiftCameraMoveSpeed = (10 * (scrollWheelModifier + 1));
-                        config.shiftCameraMoveSpeed = tempShiftCameraMoveSpeed;
+                        tempMoveSpeed = (10 * (scrollWheelModifier + 1));
+                        config.cameraSprintSpeed = tempMoveSpeed;
                     }
                 }
 

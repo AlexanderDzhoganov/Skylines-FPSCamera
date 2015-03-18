@@ -9,13 +9,13 @@ namespace STGCamera
     public class Configuration
     {
 
-        public float cameraMoveSpeed = 128.0f;
-        public float shiftCameraMoveSpeed = 256.0f;
+        public float cameraWalkSpeed = 20.0f;
+        public float cameraSprintSpeed = 80.0f;
         public float cameraRotationSensitivity = 1.0f;
         public bool snapToGround = false;
         public float groundOffset = 1.10f;
         public KeyCode toggleFPSCameraHotkey = KeyCode.Tab;
-        public KeyCode toggleMoveSpeedHotkey = KeyCode.LeftShift;
+        public KeyCode toggleSprintHotkey = KeyCode.LeftShift;
         public bool limitSpeedGround = false;
         public float fieldOfView = 45.0f;
         public bool preventClipGround = true;

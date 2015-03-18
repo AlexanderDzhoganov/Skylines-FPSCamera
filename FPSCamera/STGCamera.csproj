@@ -8,7 +8,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>STGCamera</RootNamespace>
-    <AssemblyName>FPSCamera</AssemblyName>
+    <AssemblyName>STGCamera</AssemblyName>
     <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
@@ -60,7 +60,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>copy FPSCamera.dll "C:\Users\neocromicon\AppData\Local\Colossal Order\Cities_Skylines\Addons\Mods\FirstPersonMod\"</PostBuildEvent>
+    <PostBuildEvent>copy STGCamera.dll "C:\Users\neocromicon\AppData\Local\Colossal Order\Cities_Skylines\Addons\Mods\SnapToGround\"</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
