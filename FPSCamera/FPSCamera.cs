@@ -58,6 +58,9 @@ namespace FPSCamera
         private SavedInputKey cameraZoomCloser;
         private SavedInputKey cameraZoomAway;
 
+        private Component hideUIComponent = null;
+        private bool checkedForHideUI = false;
+
         void Awake()
         {
             config = Configuration.Deserialize(configPath);
@@ -160,6 +163,15 @@ namespace FPSCamera
 
             GUILayout.EndHorizontal();
 
+            if (hideUIComponent != null)
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("HideUI integration: ");
+                config.integrateHideUI = GUILayout.Toggle(config.integrateHideUI, "");
+                GUILayout.FlexibleSpace();
+                GUILayout.EndHorizontal();
+            }
+
             GUILayout.BeginHorizontal();
             GUILayout.Label("Field of view: ");
             config.fieldOfView = GUILayout.HorizontalSlider(config.fieldOfView, 30.0f, 120.0f, GUILayout.Width(200));
@@ -249,6 +261,7 @@ namespace FPSCamera
 
                 instance.controller.enabled = false;
                 Cursor.visible = false;
+                
                 if (!config.animateTransitions)
                 {
                     instance.rotationY = -instance.transform.localEulerAngles.x;
@@ -260,7 +273,20 @@ namespace FPSCamera
                 {
                     instance.controller.enabled = true;
                 }
+                
                 Cursor.visible = true;
+            }
+
+            if (hideUIComponent != null && config.integrateHideUI)
+            {
+                if (instance.fpsModeEnabled)
+                {
+                    hideUIComponent.SendMessage("Hide");
+                }
+                else
+                {
+                    hideUIComponent.SendMessage("Show");
+                }
             }
 
             if (onCameraModeChanged != null)
@@ -306,6 +332,22 @@ namespace FPSCamera
 
                 rotationY = -instance.transform.localEulerAngles.x;
                 initPositions = true;
+            }
+
+            if (!checkedForHideUI)
+            {
+                var gameObjects = FindObjectsOfType<GameObject>();
+                foreach (var go in gameObjects)
+                {
+                    var tmp = go.GetComponent("HideUI");
+                    if (tmp != null)
+                    {
+                        hideUIComponent = tmp;
+                        break;
+                    }
+                }
+
+                checkedForHideUI = true;
             }
 
             if (Input.GetKeyDown(config.toggleFPSCameraHotkey))

@@ -51,31 +51,31 @@ namespace FPSCamera
         {
             var uiView = GameObject.FindObjectOfType<UIView>();
 
-            UIButton uibutton = uiView.AddUIComponent(typeof(UIButton)) as UIButton;
+            cameraModeButton = uiView.AddUIComponent(typeof(UIButton)) as UIButton;
 
-            uibutton.width = 36;
-            uibutton.height = 36;
+            cameraModeButton.width = 36;
+            cameraModeButton.height = 36;
 
-            uibutton.pressedBgSprite = "OptionBasePressed";
-            uibutton.normalBgSprite = "OptionBase";
-            uibutton.hoveredBgSprite = "OptionBaseHovered";
-            uibutton.disabledBgSprite = "OptionBaseDisabled";
+            cameraModeButton.pressedBgSprite = "OptionBasePressed";
+            cameraModeButton.normalBgSprite = "OptionBase";
+            cameraModeButton.hoveredBgSprite = "OptionBaseHovered";
+            cameraModeButton.disabledBgSprite = "OptionBaseDisabled";
 
-            uibutton.normalFgSprite = "InfoPanelIconFreecamera";
-            uibutton.foregroundSpriteMode = UIForegroundSpriteMode.Scale;
-            uibutton.scaleFactor = 1.0f;
+            cameraModeButton.normalFgSprite = "InfoPanelIconFreecamera";
+            cameraModeButton.foregroundSpriteMode = UIForegroundSpriteMode.Scale;
+            cameraModeButton.scaleFactor = 1.0f;
 
-            uibutton.tooltip = "FPS Camera configuration";
-            uibutton.tooltipBox = uiView.defaultTooltipBox;
+            cameraModeButton.tooltip = "FPS Camera configuration";
+            cameraModeButton.tooltipBox = uiView.defaultTooltipBox;
 
             UIComponent escbutton = uiView.FindUIComponent("Esc");
-            uibutton.relativePosition = new Vector2
+            cameraModeButton.relativePosition = new Vector2
             (
-                escbutton.relativePosition.x + escbutton.width / 2.0f - uibutton.width / 2.0f - escbutton.width - 8.0f,
-                escbutton.relativePosition.y + escbutton.height / 2.0f - uibutton.height / 2.0f
+                escbutton.relativePosition.x + escbutton.width / 2.0f - cameraModeButton.width / 2.0f - escbutton.width - 8.0f,
+                escbutton.relativePosition.y + escbutton.height / 2.0f - cameraModeButton.height / 2.0f
             );
 
-            uibutton.eventClick += ButtonClick;
+            cameraModeButton.eventClick += ButtonClick;
 
             var labelObject = new GameObject();
             labelObject.transform.parent = uiView.transform;
