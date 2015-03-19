@@ -320,10 +320,16 @@ namespace FPSCamera
 
             if (Input.GetKeyDown(config.toggleFPSCameraHotkey))
             {
-                if (config.animateTransitions && fpsModeEnabled && (gameObject.transform.position - mainCameraPosition).magnitude > 0.1f)
+                if (config.animateTransitions && fpsModeEnabled)
                 {
                     inModeTransition = true;
                     transitionT = 0.0f;
+
+                    if ((gameObject.transform.position - mainCameraPosition).magnitude <= 1.0f)
+                    {
+                        transitionT = 1.0f;
+                        mainCameraOrientation = gameObject.transform.rotation;
+                    }
 
                     transitionStartPosition = gameObject.transform.position;
                     transitionStartOrientation = gameObject.transform.rotation;
