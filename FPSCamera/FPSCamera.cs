@@ -38,9 +38,6 @@ namespace FPSCamera
         private Vector3 mainCameraPosition;
         private Quaternion mainCameraOrientation;
 
-        private Vector3 fpsCameraPosition;
-        private Quaternion fpsCameraOrientation;
-
         private TerrainManager terrainManager;
         private NetManager netManager;
 
@@ -73,9 +70,6 @@ namespace FPSCamera
 
             mainCameraPosition = gameObject.transform.position;
             mainCameraOrientation = gameObject.transform.rotation;
-
-            fpsCameraPosition = gameObject.transform.position;
-            fpsCameraOrientation = gameObject.transform.rotation;
 
             terrainManager = Singleton<TerrainManager>.instance;
             netManager = Singleton<NetManager>.instance;
@@ -251,21 +245,9 @@ namespace FPSCamera
 
             if (instance.fpsModeEnabled)
             {
-                if (!firstFpsMode)
-                {
-                    fpsCameraPosition = mainCameraPosition;
-                    fpsCameraOrientation = mainCameraOrientation;
-                }
-
-                firstFpsMode = true;
-
                 instance.controller.enabled = false;
                 Cursor.visible = false;
-                
-                if (!config.animateTransitions)
-                {
-                    instance.rotationY = -instance.transform.localEulerAngles.x;
-                }
+                instance.rotationY = -instance.transform.localEulerAngles.x;
             }
             else
             {
@@ -310,26 +292,12 @@ namespace FPSCamera
             return instance.fpsModeEnabled;
         }
 
-        private Vector3 CalcFPSCameraTargetPosition()
-        {
-            return fpsCameraPosition;
-        }
-
-        private Quaternion CalcFPSCameraTargetOrientiation()
-        {
-            return fpsCameraOrientation;
-        }
-
         void Update()
         {
             if (!initPositions)
             {
                 mainCameraPosition = gameObject.transform.position;
                 mainCameraOrientation = gameObject.transform.rotation;
-
-                fpsCameraPosition = gameObject.transform.position;
-                fpsCameraOrientation = gameObject.transform.rotation;
-
                 rotationY = -instance.transform.localEulerAngles.x;
                 initPositions = true;
             }
@@ -352,7 +320,7 @@ namespace FPSCamera
 
             if (Input.GetKeyDown(config.toggleFPSCameraHotkey))
             {
-                if (config.animateTransitions)
+                if (config.animateTransitions && fpsModeEnabled && (gameObject.transform.position - mainCameraPosition).magnitude > 0.1f)
                 {
                     inModeTransition = true;
                     transitionT = 0.0f;
@@ -360,16 +328,8 @@ namespace FPSCamera
                     transitionStartPosition = gameObject.transform.position;
                     transitionStartOrientation = gameObject.transform.rotation;
 
-                    if (fpsModeEnabled)
-                    {
-                        transitionTargetPosition = mainCameraPosition;
-                        transitionTargetOrientation = mainCameraOrientation;
-                    }
-                    else
-                    {
-                        transitionTargetPosition = CalcFPSCameraTargetPosition();
-                        transitionTargetOrientation = CalcFPSCameraTargetOrientiation();
-                    }
+                    transitionTargetPosition = mainCameraPosition;
+                    transitionTargetOrientation = mainCameraOrientation;
                 }
 
                 SetMode(!fpsModeEnabled);
@@ -465,9 +425,6 @@ namespace FPSCamera
 
                 camera.fieldOfView = config.fieldOfView;
                 camera.nearClipPlane = 1.0f;
-
-                fpsCameraPosition = gameObject.transform.position;
-                fpsCameraOrientation = gameObject.transform.rotation;
             }
             else
             {
