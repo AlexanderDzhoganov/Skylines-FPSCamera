@@ -31,9 +31,10 @@ namespace FPSCamera
         float rotationY = 0f;
 
         private bool showUI = false;
-        private Rect configWindowRect = new Rect(Screen.width - 400 - 128, 100, 400, 300);
+        private Rect configWindowRect = new Rect(Screen.width - 400 - 128, 100, 400, 400);
 
-        private bool waitingForHotkey = false;
+        private bool waitingForChangeCameraHotkey = false;
+        private bool waitingForShowMouseHotkey = false;
 
         private Vector3 mainCameraPosition;
         private Quaternion mainCameraOrientation;
@@ -136,22 +137,47 @@ namespace FPSCamera
             GUILayout.FlexibleSpace();
 
             string label = config.toggleFPSCameraHotkey.ToString();
-            if (waitingForHotkey)
+            if (waitingForChangeCameraHotkey)
             {
                 label = "Waiting";
 
                 if (Event.current.type == EventType.KeyDown)
                 {
-                    waitingForHotkey = false;
+                    waitingForChangeCameraHotkey = false;
                     config.toggleFPSCameraHotkey = Event.current.keyCode;
                 }
             }
 
             if (GUILayout.Button(label, GUILayout.Width(128)))
             {
-                if (!waitingForHotkey)
+                if (!waitingForChangeCameraHotkey)
                 {
-                    waitingForHotkey = true;
+                    waitingForChangeCameraHotkey = true;
+                }
+            }
+
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Hotkey to show cursor (hold):");
+            GUILayout.FlexibleSpace();
+            label = config.showCodeFPSMouseHotkey.ToString();
+            if (waitingForShowMouseHotkey)
+            {
+                label = "Waiting";
+
+                if (Event.current.type == EventType.KeyDown)
+                {
+                    waitingForShowMouseHotkey = false;
+                    config.showCodeFPSMouseHotkey = Event.current.keyCode;
+                }
+            }
+
+            if (GUILayout.Button(label, GUILayout.Width(128)))
+            {
+                if (!waitingForShowMouseHotkey)
+                {
+                    waitingForShowMouseHotkey = true;
                 }
             }
 
@@ -185,6 +211,12 @@ namespace FPSCamera
             GUILayout.Label("Sensitivity: ");
             config.cameraRotationSensitivity = GUILayout.HorizontalSlider(config.cameraRotationSensitivity, 0.1f, 2.0f, GUILayout.Width(200));
             GUILayout.Label(config.cameraRotationSensitivity.ToString("0.00"));
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Invert Y-axis: ");
+            config.invertYAxis = GUILayout.Toggle(config.invertYAxis, "");
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
@@ -417,9 +449,17 @@ namespace FPSCamera
                     gameObject.transform.position += gameObject.transform.up * config.cameraMoveSpeed * speedFactor * Time.deltaTime;
                 }
 
-                float rotationX = transform.localEulerAngles.y + Input.GetAxis("Mouse X") * config.cameraRotationSensitivity;
-                rotationY += Input.GetAxis("Mouse Y") * config.cameraRotationSensitivity;
-                transform.localEulerAngles = new Vector3(-rotationY, rotationX, 0);
+                if (Input.GetKey(config.showCodeFPSMouseHotkey))
+                {
+                    Cursor.visible = true;
+                }
+                else
+                {
+                    float rotationX = transform.localEulerAngles.y + Input.GetAxis("Mouse X") * config.cameraRotationSensitivity;
+                    rotationY += Input.GetAxis("Mouse Y") * config.cameraRotationSensitivity * (config.invertYAxis ? -1.0f : 1.0f);
+                    transform.localEulerAngles = new Vector3(-rotationY, rotationX, 0);
+                    Cursor.visible = false;
+                }
 
                 if (config.preventClipGround)
                 {

@@ -14,6 +14,8 @@ namespace FPSCamera
         public bool snapToGround = false;
         public float groundOffset = 1.10f;
         public KeyCode toggleFPSCameraHotkey = KeyCode.Tab;
+        public KeyCode showCodeFPSMouseHotkey = KeyCode.None;
+        public bool invertYAxis = false;
         public bool limitSpeedGround = false;
         public float fieldOfView = 45.0f;
         public bool preventClipGround = true;
