@@ -100,6 +100,12 @@ namespace FPSCamera
             };
         }
 
+        public override void OnLevelUnloading()
+        {
+            GameObject.Destroy(cameraModeButton);
+            FPSCamera.Deinitialize();
+        }
+
         private void ButtonClick(UIComponent component, UIMouseEventParameter eventParam)
         {
             FPSCamera.ToggleUI();

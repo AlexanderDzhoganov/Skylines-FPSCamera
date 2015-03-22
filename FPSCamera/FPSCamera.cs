@@ -20,6 +20,11 @@ namespace FPSCamera
             instance.camera = controller.GetComponent<Camera>();
         }
 
+        public static void Deinitialize()
+        {
+            Destroy(instance);
+        }
+
         public static FPSCamera instance;
 
         public static readonly string configPath = "FPSCameraConfig.xml";
