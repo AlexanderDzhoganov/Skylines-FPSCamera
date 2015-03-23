@@ -21,7 +21,7 @@ namespace FPSCamera
         public bool preventClipGround = true;
         public bool animateTransitions = true;
         public float animationSpeed = 1.0f;
-        public bool integrateHideUI = false;
+        public bool integrateHideUI = true;
 
         public void OnPreSerialize()
         {

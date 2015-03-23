@@ -1,4 +1,6 @@
-﻿using ColossalFramework;
+﻿using System.Reflection;
+using System.Runtime.InteropServices;
+using ColossalFramework;
 using ColossalFramework.Math;
 using ColossalFramework.UI;
 using UnityEngine;
@@ -12,12 +14,19 @@ namespace FPSCamera
 
         public static OnCameraModeChanged onCameraModeChanged;
 
+        public delegate void OnUpdate();
+
+        public static OnUpdate onUpdate;
+
         public static void Initialize()
         {
             var controller = GameObject.FindObjectOfType<CameraController>();
             instance = controller.gameObject.AddComponent<FPSCamera>();
             instance.controller = controller;
             instance.camera = controller.GetComponent<Camera>();
+            instance.gameObject.AddComponent<GamePanelExtender>();
+            instance.vehicleCamera = instance.gameObject.AddComponent<VehicleCamera>();
+            instance.citizenCamera = instance.gameObject.AddComponent<CitizenCamera>();
         }
 
         public static void Deinitialize()
@@ -49,8 +58,6 @@ namespace FPSCamera
 
         private bool initPositions = false;
 
-        private bool firstFpsMode = false;
-
         private Texture2D bgTexture;
         private GUISkin skin;
 
@@ -63,6 +70,12 @@ namespace FPSCamera
 
         private Component hideUIComponent = null;
         private bool checkedForHideUI = false;
+
+        public VehicleCamera vehicleCamera;
+        public CitizenCamera citizenCamera;
+        
+        private bool cityWalkthroughMode = false;
+        private float cityWalkthroughNextChangeTimer = 0.0f;
 
         void Awake()
         {
@@ -267,6 +280,19 @@ namespace FPSCamera
                 config = new Configuration();
                 SaveConfig();
             }
+
+            if (GUILayout.Button("City walkthrough mode"))
+            {
+                cityWalkthroughMode = true;
+                cityWalkthroughNextChangeTimer = 0.0f;
+
+                if (hideUIComponent != null && config.integrateHideUI)
+                {
+                    hideUIComponent.SendMessage("Hide");
+                }
+
+                showUI = false;
+            }
         }
 
         private bool inModeTransition = false;
@@ -329,8 +355,82 @@ namespace FPSCamera
             return instance.fpsModeEnabled;
         }
 
+        public ushort GetRandomVehicle()
+        {
+            var vmanager = VehicleManager.instance;
+            int skip = Random.Range(0, vmanager.m_vehicleCount - 1);
+
+            for (ushort i = 0; i < vmanager.m_vehicles.m_buffer.Length; i++)
+            {
+                if ((vmanager.m_vehicles.m_buffer[i].m_flags & (Vehicle.Flags.Created | Vehicle.Flags.Deleted)) != Vehicle.Flags.Created)
+                {
+                    continue;
+                }
+
+                if(skip > 0)
+                {
+                    skip--;
+                    continue;
+                }
+
+                return i;
+            }
+
+            for (ushort i = 0; i < vmanager.m_vehicles.m_buffer.Length; i++)
+            {
+                if ((vmanager.m_vehicles.m_buffer[i].m_flags & (Vehicle.Flags.Created | Vehicle.Flags.Deleted)) !=
+                    Vehicle.Flags.Created)
+                {
+                    continue;
+                }
+
+                return i;
+            }
+
+            return 0;
+        }
+        
+        public uint GetRandomCitizenInstance()
+        {
+            var cmanager = CitizenManager.instance;
+            int skip = Random.Range(0, cmanager.m_instanceCount - 1);
+
+            for (uint i = 0; i < cmanager.m_instances.m_buffer.Length; i++)
+            {
+                if ((cmanager.m_instances.m_buffer[i].m_flags & (CitizenInstance.Flags.Created | CitizenInstance.Flags.Deleted)) != CitizenInstance.Flags.Created)
+                {
+                    continue;
+                }
+
+                if (skip > 0)
+                {
+                    skip--;
+                    continue;
+                }
+
+                return cmanager.m_instances.m_buffer[i].m_citizen;
+            }
+
+            for (uint i = 0; i < cmanager.m_instances.m_buffer.Length; i++)
+            {
+                if ((cmanager.m_instances.m_buffer[i].m_flags & (CitizenInstance.Flags.Created | CitizenInstance.Flags.Deleted)) != CitizenInstance.Flags.Created)
+                {
+                    continue;
+                }
+
+                return cmanager.m_instances.m_buffer[i].m_citizen;
+            }
+
+            return 0;
+        }
+
         void Update()
         {
+            if (onUpdate != null)
+            {
+                onUpdate();
+            }
+
             if (!initPositions)
             {
                 mainCameraPosition = gameObject.transform.position;
@@ -355,27 +455,73 @@ namespace FPSCamera
                 checkedForHideUI = true;
             }
 
+            if (cityWalkthroughMode)
+            {
+                cityWalkthroughNextChangeTimer -= Time.deltaTime;
+                if (cityWalkthroughNextChangeTimer <= 0.0f || !(citizenCamera.following || vehicleCamera.following))
+                {
+                    cityWalkthroughNextChangeTimer = Random.Range(3.0f, 20.0f);
+                    bool vehicleOrCitizen = Random.Range(0, 2) == 0;
+                    if (vehicleOrCitizen)
+                    {
+                        vehicleCamera.SetFollowInstance(GetRandomVehicle());
+                    }
+                    else
+                    {
+                        citizenCamera.SetFollowInstance(GetRandomCitizenInstance());   
+                    }
+                }
+            }
+
             if (Input.GetKeyDown(config.toggleFPSCameraHotkey))
             {
-                if (config.animateTransitions && fpsModeEnabled)
+                if (cityWalkthroughMode)
                 {
-                    inModeTransition = true;
-                    transitionT = 0.0f;
-
-                    if ((gameObject.transform.position - mainCameraPosition).magnitude <= 1.0f)
+                    cityWalkthroughMode = false;
+                    if (vehicleCamera.following)
                     {
-                        transitionT = 1.0f;
-                        mainCameraOrientation = gameObject.transform.rotation;
+                        vehicleCamera.StopFollowing();
+                    }
+                    if (citizenCamera.following)
+                    {
+                        citizenCamera.StopFollowing();
                     }
 
-                    transitionStartPosition = gameObject.transform.position;
-                    transitionStartOrientation = gameObject.transform.rotation;
-
-                    transitionTargetPosition = mainCameraPosition;
-                    transitionTargetOrientation = mainCameraOrientation;
+                    if (hideUIComponent != null && config.integrateHideUI)
+                    {
+                        hideUIComponent.SendMessage("Show");
+                    }
                 }
+                else if (vehicleCamera.following)
+                {
+                    vehicleCamera.StopFollowing();
+                }
+                else if (citizenCamera.following)
+                {
+                    citizenCamera.StopFollowing();
+                }
+                else
+                {
+                    if (config.animateTransitions && fpsModeEnabled)
+                    {
+                        inModeTransition = true;
+                        transitionT = 0.0f;
 
-                SetMode(!fpsModeEnabled);
+                        if ((gameObject.transform.position - mainCameraPosition).magnitude <= 1.0f)
+                        {
+                            transitionT = 1.0f;
+                            mainCameraOrientation = gameObject.transform.rotation;
+                        }
+
+                        transitionStartPosition = gameObject.transform.position;
+                        transitionStartOrientation = gameObject.transform.rotation;
+
+                        transitionTargetPosition = mainCameraPosition;
+                        transitionTargetOrientation = mainCameraOrientation;
+                    }
+
+                    SetMode(!fpsModeEnabled);
+                }
             }
 
             if (config.animateTransitions && inModeTransition)

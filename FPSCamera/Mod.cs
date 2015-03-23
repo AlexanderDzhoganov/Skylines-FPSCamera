@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Resources;
 using ColossalFramework.UI;
 using ICities;
 using UnityEngine;
@@ -82,7 +83,6 @@ namespace FPSCamera
 
             cameraModeLabel = labelObject.AddComponent<UILabel>();
             cameraModeLabel.textColor = new Color32(255, 255, 255, 255);
-            cameraModeLabel.transformPosition = new Vector3(1.15f, 0.90f);
             cameraModeLabel.Hide();
 
             FPSCamera.Initialize();
@@ -91,11 +91,23 @@ namespace FPSCamera
                 if (state)
                 {
                     cameraModeLabel.text = String.Format("Press ({0}) to exit first-person mode", FPSCamera.GetToggleUIKey());
+                    cameraModeLabel.color = new Color32(255, 255, 255, 255);
+                    cameraModeLabel.AlignTo(cameraModeButton, UIAlignAnchor.BottomRight);
+                    cameraModeLabel.relativePosition += new Vector3(-38.0f, -8.0f);
                     cameraModeLabel.Show();
                 }
                 else
                 {
                     cameraModeLabel.Hide();
+                }
+            };
+
+            FPSCamera.onUpdate = () =>
+            {
+                if (cameraModeLabel.color.a > 0)
+                {
+                    var c = cameraModeLabel.color;
+                    cameraModeLabel.color = new Color32(c.r, c.g, c.b, (byte)(c.a - 1));
                 }
             };
         }
