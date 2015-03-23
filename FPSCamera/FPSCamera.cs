@@ -74,7 +74,7 @@ namespace FPSCamera
         public VehicleCamera vehicleCamera;
         public CitizenCamera citizenCamera;
         
-        private bool cityWalkthroughMode = false;
+        public bool cityWalkthroughMode = false;
         private float cityWalkthroughNextChangeTimer = 0.0f;
 
         void Awake()
@@ -464,12 +464,71 @@ namespace FPSCamera
                     bool vehicleOrCitizen = Random.Range(0, 2) == 0;
                     if (vehicleOrCitizen)
                     {
+                        if (citizenCamera.following)
+                        {
+                            citizenCamera.StopFollowing();
+                        }
                         vehicleCamera.SetFollowInstance(GetRandomVehicle());
                     }
                     else
                     {
+                        if (vehicleCamera.following)
+                        {
+                            vehicleCamera.StopFollowing();
+                        }
                         citizenCamera.SetFollowInstance(GetRandomCitizenInstance());   
                     }
+                }
+            }
+
+            if (Input.GetKeyDown(KeyCode.Escape))
+            {
+                if (cityWalkthroughMode)
+                {
+                    cityWalkthroughMode = false;
+                    if (vehicleCamera.following)
+                    {
+                        vehicleCamera.StopFollowing();
+                    }
+                    if (citizenCamera.following)
+                    {
+                        citizenCamera.StopFollowing();
+                    }
+
+                    if (hideUIComponent != null && config.integrateHideUI)
+                    {
+                        hideUIComponent.SendMessage("Show");
+                    }
+                }
+                else if (vehicleCamera.following)
+                {
+                    vehicleCamera.StopFollowing();
+                }
+                else if (citizenCamera.following)
+                {
+                    citizenCamera.StopFollowing();
+                }
+                else if(fpsModeEnabled)
+                {
+                    if (config.animateTransitions && fpsModeEnabled)
+                    {
+                        inModeTransition = true;
+                        transitionT = 0.0f;
+
+                        if ((gameObject.transform.position - mainCameraPosition).magnitude <= 1.0f)
+                        {
+                            transitionT = 1.0f;
+                            mainCameraOrientation = gameObject.transform.rotation;
+                        }
+
+                        transitionStartPosition = gameObject.transform.position;
+                        transitionStartOrientation = gameObject.transform.rotation;
+
+                        transitionTargetPosition = mainCameraPosition;
+                        transitionTargetOrientation = mainCameraOrientation;
+                    }
+
+                    SetMode(!fpsModeEnabled);
                 }
             }
 
