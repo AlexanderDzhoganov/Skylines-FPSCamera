@@ -66,7 +66,10 @@ namespace FPSCamera
                                             forward*cameraOffsetForward +
                                             up*cameraOffsetUp;
                 Vector3 lookAt = position + (orientation * Vector3.forward) * 64.0f;
+                var currentOrientation = camera.transform.rotation;
                 camera.transform.LookAt(lookAt, Vector3.up);
+                camera.transform.rotation = Quaternion.Slerp(currentOrientation, camera.transform.rotation,
+                    Time.deltaTime*2.0f);
             }
         }
 

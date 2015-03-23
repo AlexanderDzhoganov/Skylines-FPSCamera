@@ -31,9 +31,10 @@ namespace FPSCamera
 
         void OnDestroy()
         {
-            Destroy(citizenVehicleCameraButton.gameObject);
-            Destroy(cityServiceVehicleCameraButton.gameObject);
-            Destroy(publicTransportCameraButton.gameObject);
+            Destroy(citizenVehicleCameraButton);
+            Destroy(cityServiceVehicleCameraButton);
+            Destroy(publicTransportCameraButton);
+            Destroy(citizenCameraButton);
         }
 
         void Update()

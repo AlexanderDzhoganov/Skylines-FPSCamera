@@ -13,7 +13,7 @@ namespace FPSCamera
         private VehicleManager vManager;
 
         private float cameraOffsetForward = 2.75f;
-        private float cameraOffsetForwardLargeVehicle = 2.0f;
+        private float cameraOffsetForwardLargeVehicle = 4.0f;
         private float cameraOffsetUp = 1.5f;
 
         public void SetFollowInstance(ushort instance)
@@ -52,6 +52,12 @@ namespace FPSCamera
                     return;
                 }
 
+                if ((vManager.m_vehicles.m_buffer[i].m_flags & Vehicle.Flags.Spawned) == 0)
+                {
+                    StopFollowing();
+                    return;
+                }
+
                 Vehicle v = vManager.m_vehicles.m_buffer[i];
                 Vector3 position = Vector3.zero;
                 Quaternion orientation = Quaternion.identity;
@@ -66,7 +72,11 @@ namespace FPSCamera
                     up * cameraOffsetUp +
                     (v.Info.m_isLargeVehicle ? forward * cameraOffsetForwardLargeVehicle : Vector3.zero);
                 Vector3 lookAt = position + (orientation * Vector3.forward) * 64.0f;
+
+                var currentOrientation = camera.transform.rotation;
                 camera.transform.LookAt(lookAt, Vector3.up);
+                camera.transform.rotation = Quaternion.Slerp(currentOrientation, camera.transform.rotation,
+                    Time.deltaTime * 3.0f);
             }
         }
 

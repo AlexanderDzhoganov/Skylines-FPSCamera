@@ -367,6 +367,20 @@ namespace FPSCamera
                     continue;
                 }
 
+                if (vmanager.m_vehicles.m_buffer[i].Info.m_vehicleType != VehicleInfo.VehicleType.Car)
+                {
+                    continue;
+                }
+
+                Vector3 position = Vector3.zero;
+                Quaternion orientation = Quaternion.identity;
+                vmanager.m_vehicles.m_buffer[i].GetSmoothPosition((ushort)i, out position, out orientation);
+
+                if ((mainCameraPosition - position).magnitude > 1000.0f)
+                {
+                    continue;
+                }
+
                 if(skip > 0)
                 {
                     skip--;
@@ -460,15 +474,20 @@ namespace FPSCamera
                 cityWalkthroughNextChangeTimer -= Time.deltaTime;
                 if (cityWalkthroughNextChangeTimer <= 0.0f || !(citizenCamera.following || vehicleCamera.following))
                 {
-                    cityWalkthroughNextChangeTimer = Random.Range(3.0f, 20.0f);
-                    bool vehicleOrCitizen = Random.Range(0, 2) == 0;
-                    if (vehicleOrCitizen)
+                    cityWalkthroughNextChangeTimer = Random.Range(5.0f, 10.0f);
+                    bool vehicleOrCitizen = Random.Range(0, 3) == 0;
+                    if (!vehicleOrCitizen)
                     {
                         if (citizenCamera.following)
                         {
                             citizenCamera.StopFollowing();
                         }
-                        vehicleCamera.SetFollowInstance(GetRandomVehicle());
+
+                        var vehicle = GetRandomVehicle();
+                        if (vehicle != 0)
+                        {
+                            vehicleCamera.SetFollowInstance(vehicle);
+                        }
                     }
                     else
                     {
@@ -476,7 +495,12 @@ namespace FPSCamera
                         {
                             vehicleCamera.StopFollowing();
                         }
-                        citizenCamera.SetFollowInstance(GetRandomCitizenInstance());   
+
+                        var citizen = GetRandomCitizenInstance();
+                        if (citizen != 0)
+                        {
+                            citizenCamera.SetFollowInstance(citizen); 
+                        }
                     }
                 }
             }
