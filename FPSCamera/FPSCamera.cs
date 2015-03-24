@@ -1,8 +1,5 @@
-﻿using System.Reflection;
-using System.Runtime.InteropServices;
-using ColossalFramework;
+﻿using ColossalFramework;
 using ColossalFramework.Math;
-using ColossalFramework.UI;
 using UnityEngine;
 
 namespace FPSCamera
@@ -49,6 +46,7 @@ namespace FPSCamera
 
         private bool waitingForChangeCameraHotkey = false;
         private bool waitingForShowMouseHotkey = false;
+        private bool waitingForGoFasterHotkey = false;
 
         private Vector3 mainCameraPosition;
         private Quaternion mainCameraOrientation;
@@ -171,6 +169,8 @@ namespace FPSCamera
                 if (!waitingForChangeCameraHotkey)
                 {
                     waitingForChangeCameraHotkey = true;
+                    waitingForShowMouseHotkey = false;
+                    waitingForGoFasterHotkey = false;
                 }
             }
 
@@ -196,6 +196,35 @@ namespace FPSCamera
                 if (!waitingForShowMouseHotkey)
                 {
                     waitingForShowMouseHotkey = true;
+                    waitingForChangeCameraHotkey = false;
+                    waitingForGoFasterHotkey = false;
+                }
+            }
+
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Hotkey to go faster (hold):");
+            GUILayout.FlexibleSpace();
+            label = config.goFasterHotKey.ToString();
+            if (waitingForGoFasterHotkey)
+            {
+                label = "Waiting";
+
+                if (Event.current.type == EventType.KeyDown)
+                {
+                    waitingForGoFasterHotkey = false;
+                    config.goFasterHotKey = Event.current.keyCode;
+                }
+            }
+
+            if (GUILayout.Button(label, GUILayout.Width(128)))
+            {
+                if (!waitingForGoFasterHotkey)
+                {
+                    waitingForGoFasterHotkey = true;
+                    waitingForChangeCameraHotkey = false;
+                    waitingForShowMouseHotkey = false;
                 }
             }
 
@@ -660,6 +689,11 @@ namespace FPSCamera
                 {
                     speedFactor *= Mathf.Sqrt(terrainY);
                     speedFactor = Mathf.Clamp(speedFactor, 1.0f, 256.0f);
+                }
+
+                if (Input.GetKey(config.goFasterHotKey))
+                {
+                    speedFactor *= 10.0f;
                 }
 
                 if (cameraMoveForward.IsPressed())

@@ -13,7 +13,6 @@ namespace FPSCamera
         private VehicleManager vManager;
 
         private float cameraOffsetForward = 2.75f;
-        private float cameraOffsetForwardLargeVehicle = 4.0f;
         private float cameraOffsetUp = 1.5f;
 
         private Vehicle currentVehicle;
