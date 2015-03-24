@@ -367,6 +367,11 @@ namespace FPSCamera
                     continue;
                 }
 
+                if (vmanager.m_vehicles.m_buffer[i].Info.m_vehicleAI is CarTrailerAI)
+                {
+                    continue;
+                }
+
                 if (!(vmanager.m_vehicles.m_buffer[i].Info.m_vehicleAI is CarAI))
                 {
                     continue;
