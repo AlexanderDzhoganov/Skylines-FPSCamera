@@ -367,16 +367,7 @@ namespace FPSCamera
                     continue;
                 }
 
-                if (vmanager.m_vehicles.m_buffer[i].Info.m_vehicleType != VehicleInfo.VehicleType.Car)
-                {
-                    continue;
-                }
-
-                Vector3 position = Vector3.zero;
-                Quaternion orientation = Quaternion.identity;
-                vmanager.m_vehicles.m_buffer[i].GetSmoothPosition((ushort)i, out position, out orientation);
-
-                if ((mainCameraPosition - position).magnitude > 1000.0f)
+                if (!(vmanager.m_vehicles.m_buffer[i].Info.m_vehicleAI is CarAI))
                 {
                     continue;
                 }
