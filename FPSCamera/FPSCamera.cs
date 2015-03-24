@@ -372,11 +372,6 @@ namespace FPSCamera
                     continue;
                 }
 
-                if (!(vmanager.m_vehicles.m_buffer[i].Info.m_vehicleAI is CarAI))
-                {
-                    continue;
-                }
-
                 if(skip > 0)
                 {
                     skip--;
@@ -390,6 +385,11 @@ namespace FPSCamera
             {
                 if ((vmanager.m_vehicles.m_buffer[i].m_flags & (Vehicle.Flags.Created | Vehicle.Flags.Deleted)) !=
                     Vehicle.Flags.Created)
+                {
+                    continue;
+                }
+
+                if (vmanager.m_vehicles.m_buffer[i].Info.m_vehicleAI is CarTrailerAI)
                 {
                     continue;
                 }
