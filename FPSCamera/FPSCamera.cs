@@ -68,8 +68,8 @@ namespace FPSCamera
         private SavedInputKey cameraZoomCloser;
         private SavedInputKey cameraZoomAway;
 
-        private Component hideUIComponent = null;
-        private bool checkedForHideUI = false;
+        public Component hideUIComponent = null;
+        public bool checkedForHideUI = false;
 
         public VehicleCamera vehicleCamera;
         public CitizenCamera citizenCamera;
@@ -523,10 +523,20 @@ namespace FPSCamera
                 else if (vehicleCamera.following)
                 {
                     vehicleCamera.StopFollowing();
+
+                    if (hideUIComponent != null && config.integrateHideUI)
+                    {
+                        hideUIComponent.SendMessage("Show");
+                    }
                 }
                 else if (citizenCamera.following)
                 {
                     citizenCamera.StopFollowing();
+
+                    if (hideUIComponent != null && config.integrateHideUI)
+                    {
+                        hideUIComponent.SendMessage("Show");
+                    }
                 }
                 else if(fpsModeEnabled)
                 {

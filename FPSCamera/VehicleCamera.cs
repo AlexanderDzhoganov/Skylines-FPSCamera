@@ -16,8 +16,33 @@ namespace FPSCamera
         private float cameraOffsetForwardLargeVehicle = 4.0f;
         private float cameraOffsetUp = 1.5f;
 
+        private Vehicle currentVehicle;
+
+        private Vector3 GetCameraOffsetForVehicleType(Vehicle v, Vector3 forward, Vector3 up)
+        {
+            currentVehicle = v;
+
+            var offset = forward * v.Info.m_attachOffsetFront +
+                         forward * cameraOffsetForward +
+                         up * cameraOffsetUp;
+
+            if (v.m_leadingVehicle != 0)
+            {
+                offset += up*3.0f;
+                offset -= forward*2.0f;
+            }
+            else if(v.Info.name == "Train Engine")
+            {
+                offset += forward * 2.0f;
+            }
+
+
+            return offset;
+        }
+
         public void SetFollowInstance(ushort instance)
         {
+            FPSCamera.instance.SetMode(false);
             followInstance = instance;
             following = true;
             camera.nearClipPlane = 0.1f;
@@ -31,6 +56,11 @@ namespace FPSCamera
             cameraController.enabled = true;
             camera.nearClipPlane = 1.0f;
             FPSCamera.onCameraModeChanged(false);
+
+            if (FPSCamera.instance.hideUIComponent != null && FPSCamera.instance.config.integrateHideUI)
+            {
+                FPSCamera.instance.hideUIComponent.SendMessage("Show");
+            }
         }
 
         void Awake()
@@ -65,12 +95,8 @@ namespace FPSCamera
 
                 Vector3 forward = orientation * Vector3.forward;
                 Vector3 up = orientation * Vector3.up;
-                
-                camera.transform.position = position +
-                    forward * v.Info.m_attachOffsetFront +
-                    forward * cameraOffsetForward +
-                    up * cameraOffsetUp +
-                    (v.Info.m_isLargeVehicle ? forward * cameraOffsetForwardLargeVehicle : Vector3.zero);
+
+                camera.transform.position = position + GetCameraOffsetForVehicleType(v, forward, up);
                 Vector3 lookAt = position + (orientation * Vector3.forward) * 64.0f;
 
                 var currentOrientation = camera.transform.rotation;

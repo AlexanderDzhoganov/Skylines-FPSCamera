@@ -19,6 +19,7 @@ namespace FPSCamera
 
         public void SetFollowInstance(uint instance)
         {
+            FPSCamera.instance.SetMode(false);
             followInstance = instance;
             following = true;
             camera.nearClipPlane = 0.1f;
