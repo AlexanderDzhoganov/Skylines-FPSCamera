@@ -1,4 +1,4 @@
-﻿namespace FPSCamera
+namespace FPSCamera
 {
     public static class Log
     {

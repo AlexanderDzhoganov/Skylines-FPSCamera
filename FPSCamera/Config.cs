@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Xml.Serialization;
 using UnityEngine;
 
@@ -14,7 +14,7 @@ namespace FPSCamera
         public float groundOffset = 1.10f;
         public KeyCode toggleFPSCameraHotkey = KeyCode.Tab;
         public KeyCode showCodeFPSMouseHotkey = KeyCode.None;
-        public KeyCode goFasterHotKey = KeyCode.Space;
+        public KeyCode goFasterHotKey = KeyCode.CapsLock;
         public bool invertYAxis = false;
         public bool limitSpeedGround = false;
         public float fieldOfView = 45.0f;

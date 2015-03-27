@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Resources;
 using ColossalFramework.UI;
 using ICities;
@@ -86,7 +86,7 @@ namespace FPSCamera
             cameraModeLabel.textColor = new Color32(255, 255, 255, 255);
             cameraModeLabel.Hide();
 
-            FPSCamera.Initialize();
+            FPSCamera.Initialize(mode);
             FPSCamera.onCameraModeChanged = state =>
             {
                 if (state)

@@ -1,5 +1,6 @@
-﻿using ColossalFramework;
+using ColossalFramework;
 using ColossalFramework.Math;
+using ICities;
 using UnityEngine;
 
 namespace FPSCamera
@@ -15,15 +16,26 @@ namespace FPSCamera
 
         public static OnUpdate onUpdate;
 
-        public static void Initialize()
+        private static bool editorMode = false;
+
+        public static void Initialize(LoadMode mode)
         {
             var controller = GameObject.FindObjectOfType<CameraController>();
             instance = controller.gameObject.AddComponent<FPSCamera>();
             instance.controller = controller;
             instance.camera = controller.GetComponent<Camera>();
-            instance.gameObject.AddComponent<GamePanelExtender>();
-            instance.vehicleCamera = instance.gameObject.AddComponent<VehicleCamera>();
-            instance.citizenCamera = instance.gameObject.AddComponent<CitizenCamera>();
+
+            if (mode == LoadMode.LoadGame || mode == LoadMode.NewGame)
+            {
+                instance.gameObject.AddComponent<GamePanelExtender>();
+                instance.vehicleCamera = instance.gameObject.AddComponent<VehicleCamera>();
+                instance.citizenCamera = instance.gameObject.AddComponent<CitizenCamera>();
+                editorMode = false;
+            }
+            else
+            {
+                editorMode = true;
+            }
         }
 
         public static void Deinitialize()
@@ -310,17 +322,20 @@ namespace FPSCamera
                 SaveConfig();
             }
 
-            if (GUILayout.Button("City walkthrough mode"))
+            if (!editorMode)
             {
-                cityWalkthroughMode = true;
-                cityWalkthroughNextChangeTimer = 0.0f;
-
-                if (hideUIComponent != null && config.integrateHideUI)
+                if (GUILayout.Button("City walkthrough mode"))
                 {
-                    hideUIComponent.SendMessage("Hide");
-                }
+                    cityWalkthroughMode = true;
+                    cityWalkthroughNextChangeTimer = 0.0f;
 
-                showUI = false;
+                    if (hideUIComponent != null && config.integrateHideUI)
+                    {
+                        hideUIComponent.SendMessage("Hide");
+                    }
+
+                    showUI = false;
+                }
             }
         }
 
@@ -535,11 +550,12 @@ namespace FPSCamera
                 if (cityWalkthroughMode)
                 {
                     cityWalkthroughMode = false;
-                    if (vehicleCamera.following)
+                    if (vehicleCamera != null && vehicleCamera.following)
                     {
                         vehicleCamera.StopFollowing();
                     }
-                    if (citizenCamera.following)
+
+                    if (citizenCamera != null && citizenCamera.following)
                     {
                         citizenCamera.StopFollowing();
                     }
@@ -549,7 +565,7 @@ namespace FPSCamera
                         hideUIComponent.SendMessage("Show");
                     }
                 }
-                else if (vehicleCamera.following)
+                else if (vehicleCamera != null && vehicleCamera.following)
                 {
                     vehicleCamera.StopFollowing();
 
@@ -558,7 +574,7 @@ namespace FPSCamera
                         hideUIComponent.SendMessage("Show");
                     }
                 }
-                else if (citizenCamera.following)
+                else if (citizenCamera != null && citizenCamera.following)
                 {
                     citizenCamera.StopFollowing();
 
@@ -610,11 +626,11 @@ namespace FPSCamera
                         hideUIComponent.SendMessage("Show");
                     }
                 }
-                else if (vehicleCamera.following)
+                else if (vehicleCamera != null && vehicleCamera.following)
                 {
                     vehicleCamera.StopFollowing();
                 }
-                else if (citizenCamera.following)
+                else if (citizenCamera != null && citizenCamera.following)
                 {
                     citizenCamera.StopFollowing();
                 }
