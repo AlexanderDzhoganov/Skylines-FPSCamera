@@ -17,6 +17,8 @@ namespace FPSCamera
         private float cameraOffsetForward = 0.2f;
         private float cameraOffsetUp = 1.5f;
 
+        public Vector3 userOffset = Vector3.zero;
+
         public void SetFollowInstance(uint instance)
         {
             FPSCamera.instance.SetMode(false);
@@ -24,6 +26,7 @@ namespace FPSCamera
             following = true;
             camera.nearClipPlane = 0.1f;
             cameraController.enabled = false;
+            camera.fieldOfView = FPSCamera.instance.config.fieldOfView;
             FPSCamera.onCameraModeChanged(true);
         }
 
@@ -33,6 +36,13 @@ namespace FPSCamera
             cameraController.enabled = true;
             camera.nearClipPlane = 1.0f;
             FPSCamera.onCameraModeChanged(false);
+            userOffset = Vector3.zero;
+            camera.fieldOfView = FPSCamera.instance.originalFieldOfView;
+
+            if (FPSCamera.instance.hideUIComponent != null && FPSCamera.instance.config.integrateHideUI)
+            {
+                FPSCamera.instance.hideUIComponent.SendMessage("Show");
+            }
         }
 
         void Awake()
@@ -63,10 +73,12 @@ namespace FPSCamera
                 Vector3 forward = orientation * Vector3.forward;
                 Vector3 up = orientation * Vector3.up;
 
-                camera.transform.position = position +
-                                            forward*cameraOffsetForward +
-                                            up*cameraOffsetUp;
-                Vector3 lookAt = position + (orientation * Vector3.forward) * 64.0f;
+                var pos = position +
+                          forward*cameraOffsetForward +
+                          up*cameraOffsetUp;
+                camera.transform.position = pos +
+                                            userOffset;
+                Vector3 lookAt = pos + (orientation * Vector3.forward) * 1.0f;
                 var currentOrientation = camera.transform.rotation;
                 camera.transform.LookAt(lookAt, Vector3.up);
                 camera.transform.rotation = Quaternion.Slerp(currentOrientation, camera.transform.rotation,

@@ -17,6 +17,8 @@ namespace FPSCamera
 
         private Vehicle currentVehicle;
 
+        public Vector3 userOffset = Vector3.zero;
+
         private Vector3 GetCameraOffsetForVehicleType(Vehicle v, Vector3 forward, Vector3 up)
         {
             currentVehicle = v;
@@ -46,7 +48,9 @@ namespace FPSCamera
             following = true;
             camera.nearClipPlane = 0.1f;
             cameraController.enabled = false;
+            camera.fieldOfView = FPSCamera.instance.config.fieldOfView;
             FPSCamera.onCameraModeChanged(true);
+            userOffset = Vector3.zero;
         }
 
         public void StopFollowing()
@@ -60,6 +64,8 @@ namespace FPSCamera
             {
                 FPSCamera.instance.hideUIComponent.SendMessage("Show");
             }
+       
+            camera.fieldOfView = FPSCamera.instance.originalFieldOfView;
         }
 
         void Awake()
@@ -95,8 +101,9 @@ namespace FPSCamera
                 Vector3 forward = orientation * Vector3.forward;
                 Vector3 up = orientation * Vector3.up;
 
-                camera.transform.position = position + GetCameraOffsetForVehicleType(v, forward, up);
-                Vector3 lookAt = position + (orientation * Vector3.forward) * 64.0f;
+                var pos = position + GetCameraOffsetForVehicleType(v, forward, up);
+                camera.transform.position = pos + userOffset;
+                Vector3 lookAt = pos + (orientation * Vector3.forward) * 1.0f;
 
                 var currentOrientation = camera.transform.rotation;
                 camera.transform.LookAt(lookAt, Vector3.up);

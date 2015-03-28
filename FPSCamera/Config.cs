@@ -15,6 +15,7 @@ namespace FPSCamera
         public KeyCode toggleFPSCameraHotkey = KeyCode.Tab;
         public KeyCode showCodeFPSMouseHotkey = KeyCode.None;
         public KeyCode goFasterHotKey = KeyCode.CapsLock;
+        public float goFasterSpeedMultiplier = 4.0f;
         public bool invertYAxis = false;
         public bool limitSpeedGround = false;
         public float fieldOfView = 45.0f;
@@ -22,6 +23,9 @@ namespace FPSCamera
         public bool animateTransitions = true;
         public float animationSpeed = 1.0f;
         public bool integrateHideUI = true;
+        public float walkthroughModeTimer = 25.0f;
+        public bool walkthroughModeManual = false;
+        public bool allowUserOffsetInVehicleCitizenMode = false;
 
         public void OnPreSerialize()
         {

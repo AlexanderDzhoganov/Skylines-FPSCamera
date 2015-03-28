@@ -55,6 +55,7 @@ namespace FPSCamera
             cameraModeButton = uiView.AddUIComponent(typeof(UIButton)) as UIButton;
 
             cameraModeButton.name = "FPSCameraConfigurationButton";
+            cameraModeButton.gameObject.name = "FPSCameraConfigurationButton";
             cameraModeButton.width = 36;
             cameraModeButton.height = 36;
 
