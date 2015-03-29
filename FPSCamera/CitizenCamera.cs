@@ -59,7 +59,14 @@ namespace FPSCamera
                 var citizen = cManager.m_citizens.m_buffer[followInstance];
                 var i = citizen.m_instance;
 
-                if ((cManager.m_instances.m_buffer[i].m_flags & (CitizenInstance.Flags.Created | CitizenInstance.Flags.Deleted)) != CitizenInstance.Flags.Created)
+                var flags = cManager.m_instances.m_buffer[i].m_flags;
+                if ((flags & (CitizenInstance.Flags.Created | CitizenInstance.Flags.Deleted)) != CitizenInstance.Flags.Created)
+                {
+                    StopFollowing();
+                    return;
+                }
+
+                if ((flags & CitizenInstance.Flags.EnteringVehicle) != 0)
                 {
                     StopFollowing();
                     return;
