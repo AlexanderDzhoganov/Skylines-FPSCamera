@@ -109,7 +109,7 @@ namespace FPSCamera
 
             var titleLabel = panel.AddUIComponent<UILabel>();
             titleLabel.name = "Title";
-            titleLabel.text = "First-person camera config";
+            titleLabel.text = "First-person camera configuration";
             titleLabel.autoSize = false;
             titleLabel.size = new Vector2(panel.size.x, 24.0f);
             titleLabel.AlignTo(panel, UIAlignAnchor.TopLeft);
