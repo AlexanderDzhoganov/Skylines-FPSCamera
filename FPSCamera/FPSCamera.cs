@@ -16,7 +16,7 @@ namespace FPSCamera
 
         public static OnUpdate onUpdate;
 
-        private static bool editorMode = false;
+        public static bool editorMode = false;
 
         public static void Initialize(LoadMode mode)
         {
@@ -51,21 +51,8 @@ namespace FPSCamera
         private Camera camera;
         float rotationY = 0f;
 
-        private bool showUI = false;
-        private Rect configWindowRect = new Rect(Screen.width - 400 - 128, 100, 500, 554);
-
-        private bool waitingForChangeCameraHotkey = false;
-        private bool waitingForShowMouseHotkey = false;
-        private bool waitingForGoFasterHotkey = false;
-
         private Vector3 mainCameraPosition;
         private Quaternion mainCameraOrientation;
-
-        private TerrainManager terrainManager;
-        private NetManager netManager;
-
-        private Texture2D bgTexture;
-        private GUISkin skin;
 
         private SavedInputKey cameraMoveLeft;
         private SavedInputKey cameraMoveRight;
@@ -85,7 +72,9 @@ namespace FPSCamera
 
         public float originalFieldOfView = 0.0f;
 
-        void Awake()
+        public FPSCameraUI ui;
+
+        void Start()
         {
             controller = FindObjectOfType<CameraController>();
             camera = controller.GetComponent<Camera>();
@@ -102,62 +91,36 @@ namespace FPSCamera
             mainCameraPosition = gameObject.transform.position;
             mainCameraOrientation = gameObject.transform.rotation;
 
-            terrainManager = Singleton<TerrainManager>.instance;
-            netManager = Singleton<NetManager>.instance;
-
-            bgTexture = new Texture2D(1, 1);
-            bgTexture.SetPixel(0, 0, Color.grey);
-            bgTexture.Apply();
-
             cameraMoveLeft = new SavedInputKey(Settings.cameraMoveLeft, Settings.gameSettingsFile, DefaultSettings.cameraMoveLeft, true);
             cameraMoveRight = new SavedInputKey(Settings.cameraMoveRight, Settings.gameSettingsFile, DefaultSettings.cameraMoveRight, true);
             cameraMoveForward = new SavedInputKey(Settings.cameraMoveForward, Settings.gameSettingsFile, DefaultSettings.cameraMoveForward, true);
             cameraMoveBackward = new SavedInputKey(Settings.cameraMoveBackward, Settings.gameSettingsFile, DefaultSettings.cameraMoveBackward, true);
             cameraZoomCloser = new SavedInputKey(Settings.cameraZoomCloser, Settings.gameSettingsFile, DefaultSettings.cameraZoomCloser, true);
             cameraZoomAway = new SavedInputKey(Settings.cameraZoomAway, Settings.gameSettingsFile, DefaultSettings.cameraZoomAway, true);
+
+            mainCameraPosition = gameObject.transform.position;
+            mainCameraOrientation = gameObject.transform.rotation;
+            rotationY = -instance.transform.localEulerAngles.x;
+
+            var gameObjects = FindObjectsOfType<GameObject>();
+            foreach (var go in gameObjects)
+            {
+                var tmp = go.GetComponent("HideUI");
+                if (tmp != null)
+                {
+                    hideUIComponent = tmp;
+                    break;
+                }
+            }
+
+            checkedForHideUI = true;
+
+            ui = FPSCameraUI.Instance;
         }
 
-        void SaveConfig()
+        public void SaveConfig()
         {
             Configuration.Serialize(configPath, config);
-        }
-
-        void OnGUI()
-        {
-            if (skin == null)
-            {
-                skin = ScriptableObject.CreateInstance<GUISkin>();
-                skin.box = new GUIStyle(GUI.skin.box);
-                skin.button = new GUIStyle(GUI.skin.button);
-                skin.horizontalScrollbar = new GUIStyle(GUI.skin.horizontalScrollbar);
-                skin.horizontalScrollbarLeftButton = new GUIStyle(GUI.skin.horizontalScrollbarLeftButton);
-                skin.horizontalScrollbarRightButton = new GUIStyle(GUI.skin.horizontalScrollbarRightButton);
-                skin.horizontalScrollbarThumb = new GUIStyle(GUI.skin.horizontalScrollbarThumb);
-                skin.horizontalSlider = new GUIStyle(GUI.skin.horizontalSlider);
-                skin.horizontalSliderThumb = new GUIStyle(GUI.skin.horizontalSliderThumb);
-                skin.label = new GUIStyle(GUI.skin.label);
-                skin.scrollView = new GUIStyle(GUI.skin.scrollView);
-                skin.textArea = new GUIStyle(GUI.skin.textArea);
-                skin.textField = new GUIStyle(GUI.skin.textField);
-                skin.toggle = new GUIStyle(GUI.skin.toggle);
-                skin.verticalScrollbar = new GUIStyle(GUI.skin.verticalScrollbar);
-                skin.verticalScrollbarDownButton = new GUIStyle(GUI.skin.verticalScrollbarDownButton);
-                skin.verticalScrollbarThumb = new GUIStyle(GUI.skin.verticalScrollbarThumb);
-                skin.verticalScrollbarUpButton = new GUIStyle(GUI.skin.verticalScrollbarUpButton);
-                skin.verticalSlider = new GUIStyle(GUI.skin.verticalSlider);
-                skin.verticalSliderThumb = new GUIStyle(GUI.skin.verticalSliderThumb);
-                skin.window = new GUIStyle(GUI.skin.window);
-                skin.window.normal.background = bgTexture;
-                skin.window.onNormal.background = bgTexture;
-            }
-
-            if (showUI)
-            {
-                var oldSkin = GUI.skin;
-                GUI.skin = skin;
-                configWindowRect = GUI.Window(21521, configWindowRect, DoConfigWindow, "FPS Camera configuration");
-                GUI.skin = oldSkin;
-            }
         }
 
         void GUICheckbox(string label, ref bool state)
@@ -187,92 +150,18 @@ namespace FPSCamera
             GUILayout.EndHorizontal();
         }
 
-        void DoConfigWindow(int wnd)
+        public void SetFieldOfView(float fov)
         {
-            GUILayout.Space(4);
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Hotkey to toggle first-person:", GUILayout.ExpandWidth(false));
-
-            string label = config.toggleFPSCameraHotkey.ToString();
-            if (waitingForChangeCameraHotkey)
+            config.fieldOfView = fov;
+            SaveConfig();
+            if (fpsModeEnabled)
             {
-                label = "Waiting";
-
-                if (Event.current.type == EventType.KeyDown)
-                {
-                    waitingForChangeCameraHotkey = false;
-                    config.toggleFPSCameraHotkey = Event.current.keyCode;
-                }
+                camera.fieldOfView = fov;
             }
+        }
 
-            if (GUILayout.Button(label, GUILayout.Width(128)))
-            {
-                if (!waitingForChangeCameraHotkey)
-                {
-                    waitingForChangeCameraHotkey = true;
-                    waitingForShowMouseHotkey = false;
-                    waitingForGoFasterHotkey = false;
-                }
-            }
-
-            GUILayout.EndHorizontal();
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Hotkey to show cursor (hold):", GUILayout.ExpandWidth(false));
-            label = config.showCodeFPSMouseHotkey.ToString();
-            if (waitingForShowMouseHotkey)
-            {
-                label = "Waiting";
-
-                if (Event.current.type == EventType.KeyDown)
-                {
-                    waitingForShowMouseHotkey = false;
-                    config.showCodeFPSMouseHotkey = Event.current.keyCode;
-                }
-            }
-
-            if (GUILayout.Button(label, GUILayout.Width(128)))
-            {
-                if (!waitingForShowMouseHotkey)
-                {
-                    waitingForShowMouseHotkey = true;
-                    waitingForChangeCameraHotkey = false;
-                    waitingForGoFasterHotkey = false;
-                }
-            }
-
-            GUILayout.EndHorizontal();
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Hotkey to go faster (hold):", GUILayout.ExpandWidth(false));
-            label = config.goFasterHotKey.ToString();
-            if (waitingForGoFasterHotkey)
-            {
-                label = "Waiting";
-
-                if (Event.current.type == EventType.KeyDown)
-                {
-                    waitingForGoFasterHotkey = false;
-                    config.goFasterHotKey = Event.current.keyCode;
-                }
-            }
-
-            if (GUILayout.Button(label, GUILayout.Width(128)))
-            {
-                if (!waitingForGoFasterHotkey)
-                {
-                    waitingForGoFasterHotkey = true;
-                    waitingForChangeCameraHotkey = false;
-                    waitingForShowMouseHotkey = false;
-                }
-            }
-
-            GUILayout.EndHorizontal();
-
-            GUISlider("\"Go faster\" speed multiplier:", ref config.goFasterSpeedMultiplier, 2.0f, 20.0f);
-
-            GUILayout.Space(8);
+     /*   void DoConfigWindow(int wnd)
+        {
             
             if (hideUIComponent != null)
             {
@@ -359,13 +248,38 @@ namespace FPSCamera
 
             GUILayout.EndHorizontal();
         }
-
+        */
         private bool inModeTransition = false;
         private Vector3 transitionTargetPosition = Vector3.zero;
         private Quaternion transitionTargetOrientation = Quaternion.identity;
         private Vector3 transitionStartPosition = Vector3.zero;
         private Quaternion transitionStartOrientation = Quaternion.identity;
         private float transitionT = 0.0f;
+
+        public void EnterWalkthroughMode()
+        {
+            cityWalkthroughMode = true;
+            cityWalkthroughNextChangeTimer = config.walkthroughModeTimer;
+
+            if (hideUIComponent != null && config.integrateHideUI)
+            {
+                hideUIComponent.SendMessage("Hide");
+            }
+
+            WalkthroughModeSwitchTarget();
+            FPSCameraUI.Instance.Hide();
+        }
+
+        public void ResetConfig()
+        {
+            config = new Configuration();
+            SaveConfig();
+
+            Destroy(FPSCameraUI.instance);
+            FPSCameraUI.instance = null;
+            ui = FPSCameraUI.Instance;
+            ui.Show();
+        }
 
         public void SetMode(bool fpsMode)
         {
@@ -405,11 +319,6 @@ namespace FPSCamera
             {
                 onCameraModeChanged(fpsMode);
             }
-        }
-
-        public static void ToggleUI()
-        {
-            instance.showUI = !instance.showUI;
         }
 
         public static KeyCode GetToggleUIKey()
@@ -530,26 +439,6 @@ namespace FPSCamera
                     citizenCamera.SetFollowInstance(citizen);
                 }
             }
-        }
-
-        void Start()
-        {
-            mainCameraPosition = gameObject.transform.position;
-            mainCameraOrientation = gameObject.transform.rotation;
-            rotationY = -instance.transform.localEulerAngles.x;
-
-            var gameObjects = FindObjectsOfType<GameObject>();
-            foreach (var go in gameObjects)
-            {
-                var tmp = go.GetComponent("HideUI");
-                if (tmp != null)
-                {
-                    hideUIComponent = tmp;
-                    break;
-                }
-            }
-
-            checkedForHideUI = true;
         }
 
         void UpdateCityWalkthrough()
@@ -771,8 +660,8 @@ namespace FPSCamera
 
             var pos = gameObject.transform.position;
 
-            float terrainY = terrainManager.SampleDetailHeight(gameObject.transform.position);
-            float waterY = terrainManager.WaterLevel(new Vector2(gameObject.transform.position.x, gameObject.transform.position.z));
+            float terrainY = TerrainManager.instance.SampleDetailHeight(gameObject.transform.position);
+            float waterY = TerrainManager.instance.WaterLevel(new Vector2(gameObject.transform.position.x, gameObject.transform.position.z));
             terrainY = Mathf.Max(terrainY, waterY);
 
             if (config.animateTransitions && inModeTransition)
@@ -803,8 +692,8 @@ namespace FPSCamera
                     ushort segmentIndex;
                     Vector3 hitPos2;
 
-                    if (netManager.RayCast(ray, 0f, ItemClass.Service.Road, ItemClass.Service.PublicTransport, ItemClass.SubService.None, ItemClass.SubService.None, ItemClass.Layer.Default, ItemClass.Layer.None, NetNode.Flags.None, NetSegment.Flags.None, out hitPos, out nodeIndex, out segmentIndex)
-                        | netManager.RayCast(ray, 0f, ItemClass.Service.Beautification, ItemClass.Service.Water, ItemClass.SubService.None, ItemClass.SubService.None, ItemClass.Layer.Default, ItemClass.Layer.None, NetNode.Flags.None, NetSegment.Flags.None, out hitPos2, out nodeIndex, out segmentIndex))
+                    if (NetManager.instance.RayCast(ray, 0f, ItemClass.Service.Road, ItemClass.Service.PublicTransport, ItemClass.SubService.None, ItemClass.SubService.None, ItemClass.Layer.Default, ItemClass.Layer.None, NetNode.Flags.None, NetSegment.Flags.None, out hitPos, out nodeIndex, out segmentIndex)
+                        | NetManager.instance.RayCast(ray, 0f, ItemClass.Service.Beautification, ItemClass.Service.Water, ItemClass.SubService.None, ItemClass.SubService.None, ItemClass.Layer.Default, ItemClass.Layer.None, NetNode.Flags.None, NetSegment.Flags.None, out hitPos2, out nodeIndex, out segmentIndex))
                     {
                         terrainY = Mathf.Max(terrainY, Mathf.Max(hitPos.y, hitPos2.y));
                     }
@@ -851,7 +740,7 @@ namespace FPSCamera
                     gameObject.transform.position += gameObject.transform.up * config.cameraMoveSpeed * speedFactor * Time.deltaTime;
                 }
 
-                if (Input.GetKey(config.showCodeFPSMouseHotkey))
+                if (Input.GetKey(config.showMouseHotkey))
                 {
                     Cursor.visible = true;
                 }
@@ -881,8 +770,8 @@ namespace FPSCamera
                 ushort segmentIndex;
                 Vector3 hitPos2;
 
-                if (netManager.RayCast(ray, 0f, ItemClass.Service.Road, ItemClass.Service.PublicTransport, ItemClass.SubService.None, ItemClass.SubService.None, ItemClass.Layer.Default, ItemClass.Layer.None, NetNode.Flags.None, NetSegment.Flags.None, out hitPos, out nodeIndex, out segmentIndex)
-                    | netManager.RayCast(ray, 0f, ItemClass.Service.Beautification, ItemClass.Service.Water, ItemClass.SubService.None, ItemClass.SubService.None, ItemClass.Layer.Default, ItemClass.Layer.None, NetNode.Flags.None, NetSegment.Flags.None, out hitPos2, out nodeIndex, out segmentIndex))
+                if (NetManager.instance.RayCast(ray, 0f, ItemClass.Service.Road, ItemClass.Service.PublicTransport, ItemClass.SubService.None, ItemClass.SubService.None, ItemClass.Layer.Default, ItemClass.Layer.None, NetNode.Flags.None, NetSegment.Flags.None, out hitPos, out nodeIndex, out segmentIndex)
+                    | NetManager.instance.RayCast(ray, 0f, ItemClass.Service.Beautification, ItemClass.Service.Water, ItemClass.SubService.None, ItemClass.SubService.None, ItemClass.Layer.Default, ItemClass.Layer.None, NetNode.Flags.None, NetSegment.Flags.None, out hitPos2, out nodeIndex, out segmentIndex))
                 {
                     terrainY = Mathf.Max(terrainY, Mathf.Max(hitPos.y, hitPos2.y));
                 }
