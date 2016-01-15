@@ -51,6 +51,7 @@
   <ItemGroup>
     <Compile Include="CitizenCamera.cs" />
     <Compile Include="Config.cs" />
+    <Compile Include="IFollowCamera.cs" />
     <Compile Include="FPSCamera.cs" />
     <Compile Include="FPSCameraUI.cs" />
     <Compile Include="GamePanelExtender.cs" />

@@ -3,10 +3,10 @@ using UnityEngine;
 namespace FPSCamera
 {
 
-    public class VehicleCamera : MonoBehaviour
+    public class VehicleCamera : MonoBehaviour, IFollowCamera
     {
-        private ushort followInstance;
-        public bool following = false;
+        private uint followInstance;
+        private bool following = false;
         private CameraController cameraController;
         private Camera camera;
 
@@ -17,7 +17,33 @@ namespace FPSCamera
 
         private Vehicle currentVehicle;
 
-        public Vector3 userOffset = Vector3.zero;
+        private Vector3 userOffset = Vector3.zero;
+
+        public Vector3 UserOffset
+        {
+            get
+            {
+                return userOffset;
+            }
+
+            set
+            {
+                userOffset = value;
+            }
+        }
+
+        public bool Following
+        {
+            get
+            {
+                return following;
+            }
+
+            set
+            {
+                following = value;
+            }
+        }
 
         private Vector3 GetCameraOffsetForVehicleType(Vehicle v, Vector3 forward, Vector3 up)
         {
@@ -41,7 +67,7 @@ namespace FPSCamera
             return offset;
         }
 
-        public void SetFollowInstance(ushort instance)
+        public void SetFollowInstance(uint instance)
         {
             FPSCamera.instance.SetMode(false);
             followInstance = instance;

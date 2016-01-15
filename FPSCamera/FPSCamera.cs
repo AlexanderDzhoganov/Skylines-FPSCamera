@@ -2,9 +2,63 @@ using ColossalFramework;
 using ColossalFramework.Math;
 using ICities;
 using UnityEngine;
+using System.Runtime.InteropServices;
 
 namespace FPSCamera
 {
+    static class NativeFuncs
+    {
+        [DllImport("xinput1_3.dll")]
+        public static extern uint XInputGetState(uint playerIndex, out XInputState.XInputStateRaw state);
+    }
+
+    public struct XInputState
+    {
+        /* Deadzones as defined in Xinput.h */
+        public const short XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE = 7849;
+        public const short XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE = 8689;
+        public const byte XINPUT_GAMEPAD_TRIGGER_THRESHOLD = 30;
+
+        /* Axis normalization constants */
+        public const short LEFT_AXIS_NORM = (0x7FFF - XInputState.XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE);
+        public const short RIGHT_AXIS_NORM = (0x7FFF - XInputState.XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE);
+
+        /* Button bitmasks for wButtons */
+        public const ushort XINPUT_GAMEPAD_DPAD_UP = 0x0001;
+        public const ushort XINPUT_GAMEPAD_DPAD_DOWN = 0x0002;
+        public const ushort XINPUT_GAMEPAD_DPAD_LEFT = 0x0004;
+        public const ushort XINPUT_GAMEPAD_DPAD_RIGHT = 0x0008;
+        public const ushort XINPUT_GAMEPAD_START = 0x0010;
+        public const ushort XINPUT_GAMEPAD_BACK = 0x0020;
+        public const ushort XINPUT_GAMEPAD_LEFT_THUMB = 0x0040;
+        public const ushort XINPUT_GAMEPAD_RIGHT_THUMB = 0x0080;
+        public const ushort XINPUT_GAMEPAD_LEFT_SHOULDER = 0x0100;
+        public const ushort XINPUT_GAMEPAD_RIGHT_SHOULDER = 0x0200;
+        public const ushort XINPUT_GAMEPAD_A = 0x1000;
+        public const ushort XINPUT_GAMEPAD_B = 0x2000;
+        public const ushort XINPUT_GAMEPAD_X = 0x4000;
+        public const ushort XINPUT_GAMEPAD_Y = 0x8000;
+
+        [StructLayout(LayoutKind.Sequential)]
+        internal struct XInputStateRaw
+        {
+            public uint dwPacketNumber;
+            public GamePad Gamepad;
+
+            [StructLayout(LayoutKind.Sequential)]
+            public struct GamePad
+            {
+                public ushort wButtons;
+                public byte bLeftTrigger;
+                public byte bRightTrigger;
+                public short sThumbLX;
+                public short sThumbLY;
+                public short sThumbRX;
+                public short sThumbRY;
+            }
+        }
+    }
+
     public class FPSCamera : MonoBehaviour
     {
 
@@ -73,6 +127,8 @@ namespace FPSCamera
         public float originalFieldOfView = 0.0f;
 
         public FPSCameraUI ui;
+
+        private const float gamePadRightStickBaseAmplification = 30f;
 
         void Start()
         {
@@ -326,7 +382,7 @@ namespace FPSCamera
             bool vehicleOrCitizen = Random.Range(0, 3) == 0;
             if (!vehicleOrCitizen)
             {
-                if (citizenCamera.following)
+                if (citizenCamera.Following)
                 {
                     citizenCamera.StopFollowing();
                 }
@@ -339,7 +395,7 @@ namespace FPSCamera
             }
             else
             {
-                if (vehicleCamera.following)
+                if (vehicleCamera.Following)
                 {
                     vehicleCamera.StopFollowing();
                 }
@@ -357,7 +413,7 @@ namespace FPSCamera
             if (cityWalkthroughMode && !config.walkthroughModeManual)
             {
                 cityWalkthroughNextChangeTimer -= Time.deltaTime;
-                if (cityWalkthroughNextChangeTimer <= 0.0f || !(citizenCamera.following || vehicleCamera.following))
+                if (cityWalkthroughNextChangeTimer <= 0.0f || !(citizenCamera.Following || vehicleCamera.Following))
                 {
                     cityWalkthroughNextChangeTimer = config.walkthroughModeTimer;
                     WalkthroughModeSwitchTarget();
@@ -372,67 +428,238 @@ namespace FPSCamera
             }
         }
 
+        XInputState.XInputStateRaw getControllerInput()
+        {
+            try
+            {
+                XInputState.XInputStateRaw state;
+                uint rc = NativeFuncs.XInputGetState(0, out state);
+                if (rc != 0)
+                {
+                    state.Gamepad.sThumbLX = 0;
+                    state.Gamepad.sThumbLY = 0;
+                    state.Gamepad.sThumbRX = 0;
+                    state.Gamepad.sThumbRY = 0;
+                    state.Gamepad.wButtons = 0;
+                }
+                else
+                {
+                    // Compensate Left X axle
+                    if (state.Gamepad.sThumbLX < -XInputState.XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE)
+                    {
+                        state.Gamepad.sThumbLX += XInputState.XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE;
+                    }
+                    else if (state.Gamepad.sThumbLX > XInputState.XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE)
+                    {
+                        state.Gamepad.sThumbLX -= XInputState.XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE;
+                    }
+                    else
+                    {
+                        state.Gamepad.sThumbLX = 0;
+                    }
+
+                    // Compensate Left Y axle
+                    if (state.Gamepad.sThumbLY < -XInputState.XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE)
+                    {
+                        state.Gamepad.sThumbLY += XInputState.XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE;
+                    }
+                    else if (state.Gamepad.sThumbLY > XInputState.XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE)
+                    {
+                        state.Gamepad.sThumbLY -= XInputState.XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE;
+                    }
+                    else
+                    {
+                        state.Gamepad.sThumbLY = 0;
+                    }
+
+                    // Compensate Right X axle
+                    if (state.Gamepad.sThumbRX < -XInputState.XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE)
+                    {
+                        state.Gamepad.sThumbRX += XInputState.XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE;
+                    }
+                    else if (state.Gamepad.sThumbRX > XInputState.XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE)
+                    {
+                        state.Gamepad.sThumbRX -= XInputState.XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE;
+                    }
+                    else
+                    {
+                        state.Gamepad.sThumbRX = 0;
+                    }
+
+                    // Compensate Right Y axle
+                    if (state.Gamepad.sThumbRY < -XInputState.XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE)
+                    {
+                        state.Gamepad.sThumbRY += XInputState.XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE;
+                    }
+                    else if (state.Gamepad.sThumbRY > XInputState.XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE)
+                    {
+                        state.Gamepad.sThumbRY -= XInputState.XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE;
+                    }
+                    else
+                    {
+                        state.Gamepad.sThumbRY = 0;
+                    }
+                }
+                return state;
+            }
+            catch (System.DllNotFoundException e)
+            {
+                Log.Error(e.Message);
+                return new XInputState.XInputStateRaw();
+            }
+        }
+
+        void UpdateCamera(IFollowCamera cam)
+        {
+            if (config.useController)
+            {
+                float gamePadLx, gamePadLy, gamePadRx, gamePadRy;
+                XInputState.XInputStateRaw state = getControllerInput();
+
+                gamePadLx = ((float)state.Gamepad.sThumbLX) / XInputState.LEFT_AXIS_NORM;
+                gamePadLy = ((float)state.Gamepad.sThumbLY) / XInputState.LEFT_AXIS_NORM;
+                gamePadRx = ((float)state.Gamepad.sThumbRX) / XInputState.RIGHT_AXIS_NORM;
+                gamePadRy = ((float)state.Gamepad.sThumbRY) / XInputState.RIGHT_AXIS_NORM;
+
+                cam.UserOffset += gameObject.transform.forward * config.cameraMoveSpeed * 0.25f * Time.deltaTime * gamePadLy;
+                cam.UserOffset -= gameObject.transform.right * config.cameraMoveSpeed * 0.25f * Time.deltaTime * gamePadLx;
+
+                if ((state.Gamepad.wButtons & XInputState.XINPUT_GAMEPAD_A) == XInputState.XINPUT_GAMEPAD_A)
+                {
+                    cam.UserOffset += gameObject.transform.up * config.cameraMoveSpeed * 0.25f * Time.deltaTime;
+                }
+                else if ((state.Gamepad.wButtons & XInputState.XINPUT_GAMEPAD_RIGHT_THUMB) == XInputState.XINPUT_GAMEPAD_RIGHT_THUMB)
+                {
+                    cam.UserOffset += gameObject.transform.up * config.cameraMoveSpeed * 0.25f * Time.deltaTime;
+                }
+            }
+            else
+            {
+                if (cameraMoveForward.IsPressed())
+                {
+                    cam.UserOffset += gameObject.transform.forward * config.cameraMoveSpeed * 0.25f * Time.deltaTime;
+                }
+                else if (cameraMoveBackward.IsPressed())
+                {
+                    cam.UserOffset -= gameObject.transform.forward * config.cameraMoveSpeed * 0.25f * Time.deltaTime;
+                }
+
+                if (cameraMoveLeft.IsPressed())
+                {
+                    cam.UserOffset -= gameObject.transform.right * config.cameraMoveSpeed * 0.25f * Time.deltaTime;
+                }
+                else if (cameraMoveRight.IsPressed())
+                {
+                    cam.UserOffset += gameObject.transform.right * config.cameraMoveSpeed * 0.25f * Time.deltaTime;
+                }
+
+                if (cameraZoomAway.IsPressed())
+                {
+                    cam.UserOffset -= gameObject.transform.up * config.cameraMoveSpeed * 0.25f * Time.deltaTime;
+                }
+                else if (cameraZoomCloser.IsPressed())
+                {
+                    cam.UserOffset += gameObject.transform.up * config.cameraMoveSpeed * 0.25f * Time.deltaTime;
+                }
+            }
+        }
+
         void UpdateCameras()
         {
-            if (vehicleCamera != null && vehicleCamera.following && config.allowUserOffsetInVehicleCitizenMode)
+            if (vehicleCamera != null && vehicleCamera.Following && config.allowUserOffsetInVehicleCitizenMode)
             {
+                UpdateCamera(vehicleCamera);
+            }
+
+            if (citizenCamera != null && citizenCamera.Following && config.allowUserOffsetInVehicleCitizenMode)
+            {
+                UpdateCamera(citizenCamera);
+            }
+        }
+
+        void UpdateFpsCamera(float speedFactor)
+        {
+            if (config.useController)
+            {
+                float gamePadLx, gamePadLy, gamePadRx, gamePadRy;
+                XInputState.XInputStateRaw state = getControllerInput();
+
+                gamePadLx = ((float)state.Gamepad.sThumbLX) / XInputState.LEFT_AXIS_NORM;
+                gamePadLy = ((float)state.Gamepad.sThumbLY) / XInputState.LEFT_AXIS_NORM;
+                gamePadRx = ((float)state.Gamepad.sThumbRX) / XInputState.RIGHT_AXIS_NORM;
+                gamePadRy = ((float)state.Gamepad.sThumbRY) / XInputState.RIGHT_AXIS_NORM;
+                
+                if (Input.GetKey(config.goFasterHotKey))
+                {
+                    speedFactor *= config.goFasterSpeedMultiplier;
+                }
+
+                gameObject.transform.position += gameObject.transform.forward * config.cameraMoveSpeed * speedFactor * Time.deltaTime * gamePadLy;
+                gameObject.transform.position += gameObject.transform.right * config.cameraMoveSpeed * speedFactor * Time.deltaTime * gamePadLx;
+
+                if ((state.Gamepad.wButtons & XInputState.XINPUT_GAMEPAD_A) == XInputState.XINPUT_GAMEPAD_A)
+                {
+                    gameObject.transform.position += Vector3.up * config.cameraMoveSpeed * speedFactor * Time.deltaTime;
+                }
+                else if ((state.Gamepad.wButtons & XInputState.XINPUT_GAMEPAD_RIGHT_THUMB) == XInputState.XINPUT_GAMEPAD_RIGHT_THUMB)
+                {
+                    gameObject.transform.position -= Vector3.up * config.cameraMoveSpeed * speedFactor * Time.deltaTime;
+                }
+                
+                float rotationX = transform.localEulerAngles.y + gamePadRx * gamePadRightStickBaseAmplification * config.cameraRotationSensitivity * Time.deltaTime;
+                rotationY += gamePadRy * gamePadRightStickBaseAmplification * config.cameraRotationSensitivity * Time.deltaTime * (config.invertYAxis ? -1.0f : 1.0f);
+                transform.localEulerAngles = new Vector3(-rotationY, rotationX, 0);
+                Cursor.visible = false;
+            }
+            else
+            {
+                if (Input.GetKey(config.goFasterHotKey))
+                {
+                    speedFactor *= config.goFasterSpeedMultiplier;
+                }
+
                 if (cameraMoveForward.IsPressed())
                 {
-                    vehicleCamera.userOffset += gameObject.transform.forward * config.cameraMoveSpeed * 0.25f * Time.deltaTime;
+                    gameObject.transform.position += gameObject.transform.forward * config.cameraMoveSpeed * speedFactor * Time.deltaTime;
                 }
                 else if (cameraMoveBackward.IsPressed())
                 {
-                    vehicleCamera.userOffset -= gameObject.transform.forward * config.cameraMoveSpeed * 0.25f * Time.deltaTime;
+                    gameObject.transform.position -= gameObject.transform.forward * config.cameraMoveSpeed * speedFactor * Time.deltaTime;
                 }
 
                 if (cameraMoveLeft.IsPressed())
                 {
-                    vehicleCamera.userOffset -= gameObject.transform.right * config.cameraMoveSpeed * 0.25f * Time.deltaTime;
+                    gameObject.transform.position -= gameObject.transform.right * config.cameraMoveSpeed * speedFactor * Time.deltaTime;
                 }
                 else if (cameraMoveRight.IsPressed())
                 {
-                    vehicleCamera.userOffset += gameObject.transform.right * config.cameraMoveSpeed * 0.25f * Time.deltaTime;
+                    gameObject.transform.position += gameObject.transform.right * config.cameraMoveSpeed * speedFactor * Time.deltaTime;
                 }
 
                 if (cameraZoomAway.IsPressed())
                 {
-                    vehicleCamera.userOffset -= gameObject.transform.up * config.cameraMoveSpeed * 0.25f * Time.deltaTime;
+                    gameObject.transform.position -= gameObject.transform.up * config.cameraMoveSpeed * speedFactor * Time.deltaTime;
                 }
                 else if (cameraZoomCloser.IsPressed())
                 {
-                    vehicleCamera.userOffset += gameObject.transform.up * config.cameraMoveSpeed * 0.25f * Time.deltaTime;
+                    gameObject.transform.position += gameObject.transform.up * config.cameraMoveSpeed * speedFactor * Time.deltaTime;
+                }
+
+                if (Input.GetKey(config.showMouseHotkey))
+                {
+                    Cursor.visible = true;
+                }
+                else
+                {
+                    float rotationX = transform.localEulerAngles.y + Input.GetAxis("Mouse X") * config.cameraRotationSensitivity;
+                    rotationY += Input.GetAxis("Mouse Y") * config.cameraRotationSensitivity * (config.invertYAxis ? -1.0f : 1.0f);
+                    transform.localEulerAngles = new Vector3(-rotationY, rotationX, 0);
+                    Cursor.visible = false;
                 }
             }
 
-            if (citizenCamera != null && citizenCamera.following && config.allowUserOffsetInVehicleCitizenMode)
-            {
-                if (cameraMoveForward.IsPressed())
-                {
-                    citizenCamera.userOffset += gameObject.transform.forward * config.cameraMoveSpeed * 0.25f * Time.deltaTime;
-                }
-                else if (cameraMoveBackward.IsPressed())
-                {
-                    citizenCamera.userOffset -= gameObject.transform.forward * config.cameraMoveSpeed * 0.25f * Time.deltaTime;
-                }
-
-                if (cameraMoveLeft.IsPressed())
-                {
-                    citizenCamera.userOffset -= gameObject.transform.right * config.cameraMoveSpeed * 0.25f * Time.deltaTime;
-                }
-                else if (cameraMoveRight.IsPressed())
-                {
-                    citizenCamera.userOffset += gameObject.transform.right * config.cameraMoveSpeed * 0.25f * Time.deltaTime;
-                }
-
-                if (cameraZoomAway.IsPressed())
-                {
-                    citizenCamera.userOffset -= gameObject.transform.up * config.cameraMoveSpeed * 0.25f * Time.deltaTime;
-                }
-                else if (cameraZoomCloser.IsPressed())
-                {
-                    citizenCamera.userOffset += gameObject.transform.up * config.cameraMoveSpeed * 0.25f * Time.deltaTime;
-                }
-            }
+            camera.fieldOfView = config.fieldOfView;
+            camera.nearClipPlane = 1.0f;
         }
 
         void OnEscapePressed()
@@ -440,12 +667,12 @@ namespace FPSCamera
             if (cityWalkthroughMode)
             {
                 cityWalkthroughMode = false;
-                if (vehicleCamera != null && vehicleCamera.following)
+                if (vehicleCamera != null && vehicleCamera.Following)
                 {
                     vehicleCamera.StopFollowing();
                 }
 
-                if (citizenCamera != null && citizenCamera.following)
+                if (citizenCamera != null && citizenCamera.Following)
                 {
                     citizenCamera.StopFollowing();
                 }
@@ -455,7 +682,7 @@ namespace FPSCamera
                     hideUIComponent.SendMessage("Show");
                 }
             }
-            else if (vehicleCamera != null && vehicleCamera.following)
+            else if (vehicleCamera != null && vehicleCamera.Following)
             {
                 vehicleCamera.StopFollowing();
 
@@ -464,7 +691,7 @@ namespace FPSCamera
                     hideUIComponent.SendMessage("Show");
                 }
             }
-            else if (citizenCamera != null && citizenCamera.following)
+            else if (citizenCamera != null && citizenCamera.Following)
             {
                 citizenCamera.StopFollowing();
 
@@ -502,11 +729,11 @@ namespace FPSCamera
             if (cityWalkthroughMode)
             {
                 cityWalkthroughMode = false;
-                if (vehicleCamera.following)
+                if (vehicleCamera.Following)
                 {
                     vehicleCamera.StopFollowing();
                 }
-                if (citizenCamera.following)
+                if (citizenCamera.Following)
                 {
                     citizenCamera.StopFollowing();
                 }
@@ -516,11 +743,11 @@ namespace FPSCamera
                     hideUIComponent.SendMessage("Show");
                 }
             }
-            else if (vehicleCamera != null && vehicleCamera.following)
+            else if (vehicleCamera != null && vehicleCamera.Following)
             {
                 vehicleCamera.StopFollowing();
             }
-            else if (citizenCamera != null && citizenCamera.following)
+            else if (citizenCamera != null && citizenCamera.Following)
             {
                 citizenCamera.StopFollowing();
             }
@@ -619,52 +846,7 @@ namespace FPSCamera
                     speedFactor = Mathf.Clamp(speedFactor, 1.0f, 256.0f);
                 }
 
-                if (Input.GetKey(config.goFasterHotKey))
-                {
-                    speedFactor *= config.goFasterSpeedMultiplier;
-                }
-
-                if (cameraMoveForward.IsPressed())
-                {
-                    gameObject.transform.position += gameObject.transform.forward * config.cameraMoveSpeed * speedFactor * Time.deltaTime;
-                }
-                else if (cameraMoveBackward.IsPressed())
-                {
-                    gameObject.transform.position -= gameObject.transform.forward * config.cameraMoveSpeed * speedFactor * Time.deltaTime;
-                }
-
-                if (cameraMoveLeft.IsPressed())
-                {
-                    gameObject.transform.position -= gameObject.transform.right * config.cameraMoveSpeed * speedFactor * Time.deltaTime;
-                }
-                else if (cameraMoveRight.IsPressed())
-                {
-                    gameObject.transform.position += gameObject.transform.right * config.cameraMoveSpeed * speedFactor * Time.deltaTime;
-                }
-
-                if (cameraZoomAway.IsPressed())
-                {
-                    gameObject.transform.position -= gameObject.transform.up * config.cameraMoveSpeed * speedFactor * Time.deltaTime;
-                }
-                else if (cameraZoomCloser.IsPressed())
-                {
-                    gameObject.transform.position += gameObject.transform.up * config.cameraMoveSpeed * speedFactor * Time.deltaTime;
-                }
-
-                if (Input.GetKey(config.showMouseHotkey))
-                {
-                    Cursor.visible = true;
-                }
-                else
-                {
-                    float rotationX = transform.localEulerAngles.y + Input.GetAxis("Mouse X") * config.cameraRotationSensitivity;
-                    rotationY += Input.GetAxis("Mouse Y") * config.cameraRotationSensitivity * (config.invertYAxis ? -1.0f : 1.0f);
-                    transform.localEulerAngles = new Vector3(-rotationY, rotationX, 0);
-                    Cursor.visible = false;
-                }
-
-                camera.fieldOfView = config.fieldOfView;
-                camera.nearClipPlane = 1.0f;
+                UpdateFpsCamera(speedFactor);
             }
             else
             {
