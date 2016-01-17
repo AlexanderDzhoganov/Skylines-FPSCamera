@@ -522,7 +522,7 @@ namespace FPSCamera
                 gamePadRy = ((float)state.Gamepad.sThumbRY) / XInputState.RIGHT_AXIS_NORM;
 
                 cam.UserOffset += gameObject.transform.forward * config.cameraMoveSpeed * 0.25f * Time.deltaTime * gamePadLy;
-                cam.UserOffset -= gameObject.transform.right * config.cameraMoveSpeed * 0.25f * Time.deltaTime * gamePadLx;
+                cam.UserOffset += gameObject.transform.right * config.cameraMoveSpeed * 0.25f * Time.deltaTime * gamePadLx;
 
                 if ((state.Gamepad.wButtons & XInputState.XINPUT_GAMEPAD_A) == XInputState.XINPUT_GAMEPAD_A)
                 {
@@ -530,7 +530,7 @@ namespace FPSCamera
                 }
                 else if ((state.Gamepad.wButtons & XInputState.XINPUT_GAMEPAD_RIGHT_THUMB) == XInputState.XINPUT_GAMEPAD_RIGHT_THUMB)
                 {
-                    cam.UserOffset += gameObject.transform.up * config.cameraMoveSpeed * 0.25f * Time.deltaTime;
+                    cam.UserOffset -= gameObject.transform.up * config.cameraMoveSpeed * 0.25f * Time.deltaTime;
                 }
             }
             else
