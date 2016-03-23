@@ -318,6 +318,15 @@ namespace FPSCamera
 
                 y += 28.0f;
 
+                MakeCheckbox(panel, "XInputController", "Use XInput Controller (MS Windows only)", y, FPSCamera.instance.config.useController,
+                   value =>
+                   {
+                       FPSCamera.instance.config.useController = value;
+                       FPSCamera.instance.SaveConfig();
+                   });
+
+                y += 28.0f;
+
                 var walkthroughModeButton = MakeButton(panel, "WalkthroughModeButton", "Enter walkthrough mode", y,
                     () =>
                     {

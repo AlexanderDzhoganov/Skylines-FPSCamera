@@ -3,10 +3,10 @@ using UnityEngine;
 namespace FPSCamera
 {
 
-    public class CitizenCamera : MonoBehaviour
+    public class CitizenCamera : MonoBehaviour , IFollowCamera
     {
         private uint followInstance;
-        public bool following = false;
+        private bool following = false;
         public bool inVehicle = false;
 
         private CameraController cameraController;
@@ -17,7 +17,33 @@ namespace FPSCamera
         private float cameraOffsetForward = 0.2f;
         private float cameraOffsetUp = 1.5f;
 
-        public Vector3 userOffset = Vector3.zero;
+        private Vector3 userOffset = Vector3.zero;
+
+        public Vector3 UserOffset
+        {
+            get
+            {
+                return userOffset;
+            }
+
+            set
+            {
+                userOffset = value;
+            }
+        }
+
+        public bool Following
+        {
+            get
+            {
+                return following;
+            }
+
+            set
+            {
+                following = value;
+            }
+        }
 
         public void SetFollowInstance(uint instance)
         {

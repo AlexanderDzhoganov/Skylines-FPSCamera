@@ -26,6 +26,7 @@ namespace FPSCamera
         public float walkthroughModeTimer = 25.0f;
         public bool walkthroughModeManual = false;
         public bool allowUserOffsetInVehicleCitizenMode = false;
+        public bool useController = false;
 
         public void OnPreSerialize()
         {
